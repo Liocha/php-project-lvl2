@@ -1,0 +1,20 @@
+{
+    "name": "liocha/php-project-lvl2",
+    "description": "second project on https://ru.hexlet.io/?ref=257626",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Alex",
+            "email": "dev@liocha.ru"
+        }
+    ],
+    "require": {
+        "docopt/docopt": "^1.0"
+    },
+    "autoload": {
+        "files": [
+            "src/GenDiff.php"
+        ]
+    },
+    "require-dev": {}
+}
