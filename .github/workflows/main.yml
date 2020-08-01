@@ -1,0 +1,15 @@
+# Github Action - Basic
+
+name: Github-Lint-Action
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Runs a single command using the runners shell
+      - uses: actions/checkout@v2
+      - run: make install; make lint;
