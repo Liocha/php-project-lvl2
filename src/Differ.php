@@ -1,8 +1,48 @@
 <?php
 
-namespace GenDiff\GenDiff;
+namespace Differ\Differ;
 
-use function PHPSTORM_META\type;
+function run()
+{
+    $doc = <<<DOC
+		Generate diff.
+		
+		Usage:
+			gendiff (-h|--help)
+			gendiff (-v|--version)
+			gendiff [--format <fmt>] <firstFile> <secondFile>
+		
+		Options:
+			-h --help                     Show this screen
+			-v --version                  Show version
+			--format <fmt>                Report format [default: pretty]
+		DOC;
+
+    $args = \Docopt::handle($doc, array('version' => "0.0.1"));
+
+    $path_to_first_file = $args["<firstFile>"];
+    $path_to_second_file = $args["<secondFile>"];
+
+    $diff = genDiff($path_to_first_file, $path_to_second_file);
+
+    echo ($diff);
+}
+
+
+function genDiff($path_to_first_file, $path_to_second_file)
+{
+    $data_from_first_file = get_content($path_to_first_file);
+    $data_from_second_file = get_content($path_to_second_file);
+
+    $json_first_file_assoc = json_decode($data_from_first_file, true);
+    $json_second_file_assoc = json_decode($data_from_second_file, true);
+
+    $resault_tree  = create_resault_tree($json_first_file_assoc);
+
+    $updated_resault_tree  = update_resault_tree($resault_tree, $json_second_file_assoc);
+
+    return  get_resault($updated_resault_tree);
+}
 
 function is_absolute_path($path)
 {
@@ -45,7 +85,6 @@ function update_resault_tree($resault, $json_file_assoc)
                 $resault[$key] = [true, $old_val, $new_val];
             }
         } else {
-            echo (string) $val;
             $resault[$key] = [true, $val, null];
         }
     }
@@ -53,9 +92,10 @@ function update_resault_tree($resault, $json_file_assoc)
     return $resault;
 }
 
-function print_resault($resault_tree)
+function get_resault($resault_tree)
 {
-    echo "\n" . "{" . "\n";
+    $resault = '';
+    $resault = $resault . "\n" . "{" . "\n";
     foreach ($resault_tree as $key => $val) {
         [$modified, $old_val, $new_val] = $val;
 
@@ -68,50 +108,20 @@ function print_resault($resault_tree)
         }
 
         if ($modified === null) {
-            echo "    {$key}: {$old_val}\n";
+            $resault = $resault . "    {$key}: {$old_val}\n";
             continue;
         }
 
         if ($modified === false) {
-            echo "  - {$key}: {$old_val}\n";
+            $resault = $resault . "  - {$key}: {$old_val}\n";
             continue;
         }
 
-        echo $new_val === null ? "  + {$key}: {$old_val}\n" : "  - {$key}: {$old_val}\n  + {$key}: {$new_val}\n";
+        $resault = $new_val === null ?
+            $resault . "  + {$key}: {$old_val}\n" :
+            $resault . "  - {$key}: {$old_val}\n  + {$key}: {$new_val}\n";
     }
-    echo "}" . "\n";
-}
+    $resault = $resault . "}" . "\n";
 
-
-function run()
-{
-    $doc = <<<DOC
-		Generate diff.
-		
-		Usage:
-			gendiff (-h|--help)
-			gendiff (-v|--version)
-			gendiff [--format <fmt>] <firstFile> <secondFile>
-		
-		Options:
-			-h --help                     Show this screen
-			-v --version                  Show version
-			--format <fmt>                Report format [default: pretty]
-		DOC;
-
-    $args = \Docopt::handle($doc, array());
-
-    $path_to_first_file = $args["<firstFile>"];
-    $path_to_second_file = $args["<secondFile>"];
-
-    $data_from_first_file = get_content($path_to_first_file);
-    $data_from_second_file = get_content($path_to_second_file);
-
-    $json_first_file_assoc = json_decode($data_from_first_file, true);
-    $json_second_file_assoc = json_decode($data_from_second_file, true);
-
-    $resault_tree  = create_resault_tree($json_first_file_assoc);
-    $updated_resault_tree  = update_resault_tree($resault_tree, $json_second_file_assoc);
-
-    print_resault($updated_resault_tree);
+    return $resault;
 }

@@ -12,5 +12,6 @@ if (file_exists($autoloadPath1)) {
 
 
 
-use function GenDiff\GenDiff\run;
+use function Differ\Differ\run;
+
 run();
