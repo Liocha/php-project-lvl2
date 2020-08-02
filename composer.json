@@ -1,7 +1,7 @@
 {
     "name": "liocha/php-project-lvl2",
     "description": "second project on https://ru.hexlet.io/?ref=257626",
-    "type": "project",
+    "type": "library",
     "authors": [
         {
             "name": "Alex",
@@ -22,6 +22,6 @@
     },
     "scripts": {
         "phpcs": "php ./vendor/bin/phpcs",
-        "phpunit": "php ./vendor/bin/phpunit"
+        "test": "phpunit tests"
     }
 }
