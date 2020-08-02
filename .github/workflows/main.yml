@@ -21,11 +21,12 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           # Specify the PHP version
-          php-version: '7.3'
+          php-version: '7.4'
       - name: Install    
         # Install project
         run: make install
         # Run Linter
+      - name: Run linter
         run: make lint 
         # Publish code coverage on Code Climate
         # https://github.com/paambaati/codeclimate-action
