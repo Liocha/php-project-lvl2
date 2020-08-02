@@ -1,8 +1,10 @@
 <?php
 
-namespace Testing;
+namespace Differ\Tests;
 
 use PHPUnit\Framework\TestCase;
+
+use function Differ\Differ\genDiff;
 
 class GenDiffTest extends TestCase
 {
@@ -19,6 +21,6 @@ class GenDiffTest extends TestCase
         }
         
         EXP;
-        $this->assertSame($expected, \Differ\Differ\genDiff('./tests/fixtures/before.json', './tests/fixtures/after.json'));
+        $this->assertSame($expected, genDiff('./tests/fixtures/before.json', './tests/fixtures/after.json'));
     }
 }
