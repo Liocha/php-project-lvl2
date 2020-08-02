@@ -13,3 +13,4 @@ jobs:
     # Runs a single command using the runners shell
       - uses: actions/checkout@v2
       - run: make install; make lint;
+      - run: make test;
