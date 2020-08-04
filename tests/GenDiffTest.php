@@ -8,9 +8,11 @@ use function Differ\Differ\genDiff;
 
 class GenDiffTest extends TestCase
 {
-    public function testGenDiff()
+    private $expected;
+
+    public function setUp(): void
     {
-        $expected = <<<'EXP'
+        $this->expected = <<<'EXP'
 
         {
             host: hexlet.io
@@ -21,6 +23,16 @@ class GenDiffTest extends TestCase
         }
         
         EXP;
-        $this->assertSame($expected, genDiff('./tests/fixtures/before.json', './tests/fixtures/after.json'));
+    }
+
+    public function testGenDiffByJson()
+    {
+        $this->assertSame($this->expected, genDiff('./tests/fixtures/before.json', './tests/fixtures/after.json', 'json'));
+    }
+
+
+    public function testGenDiffByYaml()
+    {
+        $this->assertSame($this->expected, genDiff('./tests/fixtures/before.yml', './tests/fixtures/after.yml', 'yml'));
     }
 }

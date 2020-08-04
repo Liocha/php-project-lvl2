@@ -2,6 +2,8 @@
 
 namespace Differ\Differ;
 
+use Symfony\Component\Yaml\Yaml;
+
 function run()
 {
     $doc = <<<DOC
@@ -20,26 +22,34 @@ function run()
 
     $args = \Docopt::handle($doc, array('version' => "0.0.1"));
 
+    $format = $args["--format"];
     $path_to_first_file = $args["<firstFile>"];
     $path_to_second_file = $args["<secondFile>"];
+    dump($format);
 
-    $diff = genDiff($path_to_first_file, $path_to_second_file);
+    $diff = genDiff($path_to_first_file, $path_to_second_file, $format);
 
     echo ($diff);
 }
 
 
-function genDiff($path_to_first_file, $path_to_second_file)
+function genDiff($path_to_first_file, $path_to_second_file, $format = null)
 {
     $data_from_first_file = get_content($path_to_first_file);
     $data_from_second_file = get_content($path_to_second_file);
 
-    $json_first_file_assoc = json_decode($data_from_first_file, true);
-    $json_second_file_assoc = json_decode($data_from_second_file, true);
+    if ($format === 'yml') {
+        $first_file_assoc = Yaml::parse($data_from_first_file, Yaml::PARSE_OBJECT_FOR_MAP);
+        $second_file_assoc = Yaml::parse($data_from_second_file, Yaml::PARSE_OBJECT_FOR_MAP);
+    } elseif ($format === 'json') {
+        $first_file_assoc = json_decode($data_from_first_file, true);
+        $second_file_assoc = json_decode($data_from_second_file, true);
+    }
 
-    $resault_tree  = create_resault_tree($json_first_file_assoc);
 
-    $updated_resault_tree  = update_resault_tree($resault_tree, $json_second_file_assoc);
+    $resault_tree  = create_resault_tree($first_file_assoc);
+
+    $updated_resault_tree  = update_resault_tree($resault_tree, $second_file_assoc);
 
     return  get_resault($updated_resault_tree);
 }
