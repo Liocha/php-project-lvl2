@@ -1,0 +1,1 @@
+C:37:"PHPUnit\Runner\DefaultTestResultCache":278:{a:2:{s:7:"defects";a:2:{s:43:"Differ\Tests\GenDiffTest::testGenDiffByJson";i:3;s:46:"Differ\Tests\GenDiffTest::testGenDiffByJsonTwo";i:4;}s:5:"times";a:2:{s:43:"Differ\Tests\GenDiffTest::testGenDiffByJson";d:0.002;s:46:"Differ\Tests\GenDiffTest::testGenDiffByJsonTwo";d:0.001;}}}

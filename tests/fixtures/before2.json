@@ -13,5 +13,12 @@
     },
     "group2": {
         "abc": "12345"
+    },
+    "room": {
+        "number": 23,
+        "participants": [
+            "john",
+            "ann"
+        ]
     }
 }

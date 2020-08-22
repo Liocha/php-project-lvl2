@@ -1,0 +1,134 @@
+{
+    "common": {
+        "meta": [
+            "eql",
+            1
+        ],
+        "children": {
+            "setting1": {
+                "meta": [
+                    "eql",
+                    2
+                ],
+                "old_val": "Value 1",
+                "children": [],
+                "new_val": "Value 1"
+            },
+            "setting2": {
+                "meta": [
+                    "old",
+                    2
+                ],
+                "old_val": "200",
+                "children": []
+            },
+            "setting3": {
+                "meta": [
+                    "eql",
+                    2
+                ],
+                "old_val": true,
+                "children": [],
+                "new_val": true
+            },
+            "setting6": {
+                "meta": [
+                    "old",
+                    2
+                ],
+                "children": {
+                    "key": {
+                        "meta": [
+                            "old",
+                            3
+                        ],
+                        "old_val": "value",
+                        "children": []
+                    }
+                }
+            },
+            "setting4": {
+                "meta": [
+                    "new",
+                    2
+                ],
+                "new_val": "blah blah",
+                "children": []
+            },
+            "setting5": {
+                "meta": [
+                    "new",
+                    2
+                ],
+                "children": {
+                    "key5": {
+                        "meta": [
+                            "new",
+                            3
+                        ],
+                        "new_val": "value5",
+                        "children": []
+                    }
+                }
+            }
+        }
+    },
+    "group1": {
+        "meta": [
+            "eql",
+            1
+        ],
+        "children": {
+            "baz": {
+                "meta": [
+                    "mod",
+                    2
+                ],
+                "old_val": "bas",
+                "children": [],
+                "new_val": "bars"
+            },
+            "foo": {
+                "meta": [
+                    "eql",
+                    2
+                ],
+                "old_val": "bar",
+                "children": [],
+                "new_val": "bar"
+            }
+        }
+    },
+    "group2": {
+        "meta": [
+            "old",
+            1
+        ],
+        "children": {
+            "abc": {
+                "meta": [
+                    "old",
+                    2
+                ],
+                "old_val": "12345",
+                "children": []
+            }
+        }
+    },
+    "group3": {
+        "meta": [
+            "new",
+            1
+        ],
+        "children": {
+            "fee": {
+                "meta": [
+                    "new",
+                    2
+                ],
+                "new_val": "100500",
+                "children": []
+            }
+        }
+    }
+}

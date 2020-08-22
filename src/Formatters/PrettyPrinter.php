@@ -2,90 +2,57 @@
 
 namespace Differ\Formatters\PrettyPrinter;
 
-function pretty_print_tree($resault_diff_tree)
+function pretty_render($diff_tree)
 {
-    $data =  pretty_print_body_tree($resault_diff_tree);
-    return brackets_wrapper($data);
+
+    $resault = array_map(function ($node) {
+        return get_template($node);
+    }, $diff_tree);
+
+    $resault = array_merge(["\n{"], $resault, ["}\n"]);
+
+    return implode("\n", $resault);
 }
 
-
-function brackets_wrapper($data)
+function get_template($node)
 {
-    return  "{\n" . $data . "}\n";
-}
+    $node_templates = [
+        [
+            'type' => 'removed',
+            'process' => fn ($node) => "  - {$node['key']}: {$node['value_before']}"
+        ],
+        [
+            'type' => 'added',
+            'process' => fn ($node) => "  + {$node['key']}: " . fix_bool_val($node['value_after'])
+        ],
+        [
+            'type' => 'nested',
+            'process' => fn ($node) => null
+        ],
+        [
+            'type' => 'unchanged',
+            'process' => fn ($node) => "    {$node['key']}: {$node['value_before']}"
+        ],
+        [
+            'type' => 'changed',
+            'process' => fn ($node) => "  - {$node['key']}: {$node['value_before']}\n" .
+                "  + {$node['key']}: {$node['value_after']}"
+        ]
 
-function pretty_print_body_tree($resault_tree, $mod = true, $resault = '')
-{
+    ];
 
-    foreach ($resault_tree as $key => $val) {
-        if (count($val['children']) > 0 &&  $val['meta'][0] !== 'mod') {
-            $resault  = $resault . get_ident($val['meta'][1]) . get_sign($val['meta'][0]) .
-                $key . ": {\n" . pretty_print_body_tree($val['children'], false) . get_ident($val['meta'][1]) . "  }\n";
-        } elseif (count($val['children']) > 0) {
-            $resault  = $resault . get_ident($val['meta'][1]) . get_sign($val['meta'][0]) .
-                $key . ": {\n" . pretty_print_body_tree($val['children']) . get_ident($val['meta'][1])  . "  }\n";
-        } else {
-            $resault = $resault . node_to_string($key, $val, $mod);
+    foreach ($node_templates as $node_template) {
+        ['type' => $type, 'process' => $process] = $node_template;
+        if ($type === $node['type']) {
+            return $process($node);
         }
     }
-
-    return $resault;
 }
 
-
-
-function node_to_string($name, $node, $mod)
-{
-    [$meta_sign, $meta_deep] = $node['meta'];
-
-
-
-    $ident = get_ident($meta_deep);
-    $sign =  $mod ? get_sign($meta_sign) : '  ';
-    $tmp =  $meta_sign === 'eql' ? 'old_val' : "{$meta_sign}_val";
-
-    if ($meta_sign === 'mod') {
-        $let  = "{$ident}- {$name}: " . fix_bol_val($node['old_val']) . "\n{$ident}+ {$name}: " .
-            fix_bol_val($node['new_val']) . "\n";
-    } else {
-        $let  = "{$ident}{$sign}{$name}: " . fix_bol_val($node[$tmp]) . "\n";
-    }
-    return $let;
-}
-
-function get_ident($deep)
-{
-    $base = '  ';
-    $resault = '';
-    while ($deep * 2 > 0) {
-        $resault = $resault . $base;
-        $deep -= 1;
-    }
-    return $resault;
-}
-
-
-function fix_bol_val($val)
+function fix_bool_val($val)
 {
     if (gettype($val) === 'boolean') {
         $val = $val ? 'true' : 'false';
     }
     return $val;
-}
-
-
-function get_sign($meta_data)
-{
-    switch ($meta_data) {
-        case 'eql':
-            return '  ';
-        case 'old':
-            return '- ';
-        case 'new':
-            return '+ ';
-        case 'mod':
-            return '+ ';
-        default:
-            throw new \Exception('Unknown meta data ' . $meta_data);
-    }
 }

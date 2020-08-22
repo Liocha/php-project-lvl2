@@ -4,8 +4,9 @@ namespace Differ\Differ;
 
 use Symfony\Component\Yaml\Yaml;
 
-use function Differ\Formatters\PrettyPrinter\pretty_print_tree;
-use function Differ\Formatters\PlainPrinter\plain_print_tree;
+use function Differ\Formatters\PrettyPrinter\pretty_render;
+use function Differ\Formatters\PlainPrinter\plain_render;
+use function Differ\Parsers\parse;
 
 function run()
 {
@@ -26,55 +27,122 @@ function run()
     $args = \Docopt::handle($doc, array('version' => "0.0.1"));
 
     $format = mb_strtolower($args["--format"]);
+
     $path_to_first_file = $args["<firstFile>"];
     $path_to_second_file = $args["<secondFile>"];
 
-    $diff = gen_diff($path_to_first_file, $path_to_second_file, $format);
 
-    echo ($diff);
+    $resault = gen_diff($path_to_first_file, $path_to_second_file, $format);
+
+    echo $resault;
 }
 
-
-function gen_diff($path_to_first_file, $path_to_second_file, $format = null)
+function gen_diff($path_to_first_file, $path_to_second_file, $format)
 {
     $data_from_first_file = get_content($path_to_first_file);
     $data_from_second_file = get_content($path_to_second_file);
 
+
     $type_first_file = get_type_file($path_to_first_file);
     $type_second_file = get_type_file($path_to_second_file);
 
-    $first_file_assoc =  converting_data_to_accoc($data_from_first_file, $type_first_file);
-    $second_file_assoc = converting_data_to_accoc($data_from_second_file, $type_second_file);
+    $first_file_obj =  converting_data_to_obj($data_from_first_file, $type_first_file);
+    $second_file_obj = converting_data_to_obj($data_from_second_file, $type_second_file);
 
-    $diff_tree  = create_diff_tree($first_file_assoc);
-    $updated_diff_tree  = update_diff_tree($diff_tree, $second_file_assoc);
+    $first_file_assoc = parse($first_file_obj);
+    $second_file_assoc = parse($second_file_obj);
 
-    return  get_resault_by_format($updated_diff_tree, $format);
+    $dif_tree =  build_diff_tree($first_file_assoc, $second_file_assoc);
+
+    dd($dif_tree);
+
+    return render_by_format($dif_tree, $format);
+}
+
+function build_diff_tree($first_file_assoc, $second_file_assoc)
+{
+    $all_node_names = array_unique(array_merge(array_keys($first_file_assoc), array_keys($second_file_assoc)));
+
+    return array_map(function ($node_key) use ($first_file_assoc, $second_file_assoc) {
+        ['type' => $type, 'process' => $process] = create_node($node_key, $first_file_assoc, $second_file_assoc);
+        return $process($node_key, $first_file_assoc, $second_file_assoc, $type, 'build_diff_tree');
+    }, $all_node_names);
 }
 
 
-function get_resault_by_format($resault_tree, $format)
+function create_node($node_key, $first_assoc, $second_assoc)
+{
+    $node_types = [
+        [
+            'type' => 'removed',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => array_key_exists($node_key, $first_assoc) && !array_key_exists($node_key, $second_assoc),
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_before' => $first_assoc[$node_key]['value']]
+        ],
+        [
+            'type' => 'added',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => !array_key_exists($node_key, $first_assoc) && array_key_exists($node_key, $second_assoc),
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_after' => $second_assoc[$node_key]['value']]
+        ],
+        [
+            'type' => 'nested',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => array_key_exists('children', $first_assoc[$node_key]) && array_key_exists('children', $second_assoc[$node_key]),
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type, $f) => ['key' => $node_key, 'type' => $type, 'children' =>  $f($first_assoc['children'], $second_assoc['children'])]
+        ],
+        [
+            'type' => 'changed',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => array_key_exists('children', $first_assoc[$node_key]) && !array_key_exists('children', $second_assoc[$node_key]),
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]['children'], 'value_after' => $second_assoc[$node_key]['value']]
+        ],
+        [
+            'type' => 'changed',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => !array_key_exists('children', $first_assoc[$node_key]) && array_key_exists('children', $second_assoc[$node_key]),
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]['value'], 'value_after' => $second_assoc[$node_key]['children']]
+        ],
+        [
+            'type' => 'unchanged',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => $first_assoc[$node_key]['value']  === $second_assoc[$node_key]['value'],
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]['value']]
+        ],
+        [
+            'type' => 'changed',
+            'check' => fn ($node_key, $first_assoc, $second_assoc) => $first_assoc[$node_key]['value'] != $second_assoc[$node_key]['value'],
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]['value'], 'value_after' => $second_assoc[$node_key]['value']]
+        ]
+    ];
+
+
+    foreach ($node_types as $node_type) {
+        ['type' => $type, 'check' => $check, 'process' => $process] = $node_type;
+        if ($check($node_key, $first_assoc, $second_assoc)) {
+            return ['type' => $type, 'process' => $process];
+        }
+    }
+
+    return [];
+}
+
+function render_by_format($diff_tree, $format)
 {
     switch ($format) {
         case 'pretty':
-            return pretty_print_tree($resault_tree);
+            return pretty_render($diff_tree);
         case 'plain':
-            return plain_print_tree($resault_tree);
+            return plain_render($diff_tree);
         default:
             throw new \Exception("Unknown output format, current value is {$format}");
     }
 }
 
 
-function converting_data_to_accoc($data, $type)
+function converting_data_to_obj($data, $type)
 {
     switch ($type) {
         case 'json':
-            return json_decode($data, true);
+            return json_decode($data);
         case 'yml':
-            return Yaml::parse($data);
+            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
         case 'yuml':
-            return Yaml::parse($data);
+            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
         default:
             throw new \Exception("type '{$type}' not supported");
     }
@@ -88,70 +156,6 @@ function get_type_file($path_to_file)
         throw new \Exception("file type undefined, current path is '{$path_to_file}'");
     }
     return $data_type;
-}
-
-function create_diff_tree($assoc, $deep = 1)
-{
-    $resault = [];
-
-    foreach ($assoc as $key => $val) {
-        if (is_array($val)) {
-            $resault[$key] = ['meta' => ['old', $deep],  'children' => create_diff_tree($val, $deep + 1)];
-        } else {
-            $resault[$key] = ['meta' => ['old', $deep], 'old_val' => $val, 'children' => []];
-        };
-    }
-
-    return $resault;
-}
-
-function update_diff_tree($resault, $json_file_assoc, $deep = 1)
-{
-    foreach ($json_file_assoc as $key => $val) {
-        if (isset($resault[$key])) {
-            if (is_array($val) && count($resault[$key]['children']) > 0) {
-                $resault[$key] = array_merge(
-                    $resault[$key],
-                    ['meta' => ['eql', $deep]],
-                    ['children' =>  update_diff_tree(
-                        $resault[$key]['children'],
-                        $val,
-                        $deep + 1
-                    )]
-                );
-            }
-
-            if (!is_array($val) && count($resault[$key]['children']) > 0) {
-                $resault[$key] = array_merge($resault[$key], ['meta' => ['mod', $deep]], ['new_val' =>  $val]);
-            }
-
-            if (is_array($val) && count($resault[$key]['children']) === 0) {
-                $resault[$key] = array_merge(
-                    $resault[$key],
-                    ['meta' => ['mod', $deep]],
-                    ['children' =>  update_diff_tree([], $val, $deep + 1)]
-                );
-            }
-
-            if (!is_array($val) && count($resault[$key]['children']) === 0) {
-                $resault[$key] = $resault[$key]['old_val'] === $val ?
-                    array_merge($resault[$key], ['meta' => ['eql', $deep]], ['new_val' =>  $val]) :
-                    array_merge($resault[$key], ['meta' => ['mod', $deep]], ['new_val' =>  $val]);
-            }
-        } else {
-            if (is_array($val)) {
-                $resault[$key] = ['meta' => ['new', $deep],  'children' => update_diff_tree(
-                    [],
-                    $val,
-                    $deep + 1
-                )];
-            } else {
-                $resault[$key] = ['meta' => ['new', $deep], 'new_val' => $val, 'children' => []];
-            };
-        }
-    }
-
-    return $resault;
 }
 
 function is_absolute_path($path)

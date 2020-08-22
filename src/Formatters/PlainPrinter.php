@@ -2,7 +2,7 @@
 
 namespace Differ\Formatters\PlainPrinter;
 
-function plain_print_tree($resault_tree, $parent_chain = '', $resault = '')
+function plain_render($resault_tree, $parent_chain = '', $resault = '')
 {
     foreach ($resault_tree as $name => $node) {
         [$node_status, $node_deep] = $node['meta'];
