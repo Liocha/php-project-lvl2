@@ -65,7 +65,10 @@ function build_diff_tree($first_file_assoc, $second_file_assoc)
 
     return array_map(function ($node_key) use ($first_file_assoc, $second_file_assoc) {
         ['type' => $type, 'process' => $process] = create_node($node_key, $first_file_assoc, $second_file_assoc);
-        return $process($node_key, $first_file_assoc, $second_file_assoc, $type, 'build_diff_tree');
+        if ($type === 'nested') {
+            return ['key' => $node_key, 'type' => $type, 'children' =>  build_diff_tree($first_file_assoc[$node_key]['children'], $second_file_assoc[$node_key]['children'])];
+        }
+        return $process($node_key, $first_file_assoc, $second_file_assoc, $type);
     }, $all_node_names);
 }
 
@@ -76,17 +79,17 @@ function create_node($node_key, $first_assoc, $second_assoc)
         [
             'type' => 'removed',
             'check' => fn ($node_key, $first_assoc, $second_assoc) => array_key_exists($node_key, $first_assoc) && !array_key_exists($node_key, $second_assoc),
-            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_before' => $first_assoc[$node_key]['value']]
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_before' => array_key_exists('value', $first_assoc[$node_key]) ?  $first_assoc[$node_key]['value'] : $first_assoc[$node_key]['children']]
         ],
         [
             'type' => 'added',
             'check' => fn ($node_key, $first_assoc, $second_assoc) => !array_key_exists($node_key, $first_assoc) && array_key_exists($node_key, $second_assoc),
-            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_after' => $second_assoc[$node_key]['value']]
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'value_after' => array_key_exists('value', $second_assoc[$node_key]) ?  $second_assoc[$node_key]['value'] : $second_assoc[$node_key]['children']]
         ],
         [
             'type' => 'nested',
             'check' => fn ($node_key, $first_assoc, $second_assoc) => array_key_exists('children', $first_assoc[$node_key]) && array_key_exists('children', $second_assoc[$node_key]),
-            'process' => fn ($node_key, $first_assoc, $second_assoc, $type, $f) => ['key' => $node_key, 'type' => $type, 'children' =>  $f($first_assoc['children'], $second_assoc['children'])]
+            'process' => fn ($node_key, $first_assoc, $second_assoc, $type) => ['key' => $node_key, 'type' => $type, 'children' =>  $f($first_assoc['children'], $second_assoc['children'])]
         ],
         [
             'type' => 'changed',

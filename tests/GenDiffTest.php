@@ -8,13 +8,13 @@ use function Differ\Differ\gen_diff;
 
 class GenDiffTest extends TestCase
 {
-  private $expected;
-  private $expected_2;
-  private $expected_by_plain;
+    private $expected;
+    private $expected_2;
+    private $expected_by_plain;
 
-  public function setUp(): void
-  {
-    $this->expected = <<<'EXP'
+    public function setUp(): void
+    {
+        $this->expected = <<<'EXP'
         
         {
             host: hexlet.io
@@ -26,7 +26,7 @@ class GenDiffTest extends TestCase
 
         EXP;
 
-    $this->expected_2 = <<<'EXP'
+        $this->expected_2 = <<<'EXP'
         {
             common: {
               setting1: Value 1
@@ -55,7 +55,7 @@ class GenDiffTest extends TestCase
 
         EXP;
 
-    $this->expected_by_plain = <<<'EXP'
+        $this->expected_by_plain = <<<'EXP'
         Property 'common.setting2' was removed
         Property 'common.setting6' was removed
         Property 'common.setting4' was added with value: 'blah blah'
@@ -65,31 +65,31 @@ class GenDiffTest extends TestCase
         Property 'group3' was added with value: 'complex value'
 
         EXP;
-  }
+    }
 
-  public function testGenDiffByJson()
-  {
-    $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.json', './tests/fixtures/after.json', 'pretty'));
-  }
+    public function testGenDiffByJson()
+    {
+        $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.json', './tests/fixtures/after.json', 'pretty'));
+    }
 
-  public function testGenDiffByJsonTwo()
-  {
-    $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'pretty'));
-  }
+    public function testGenDiffByJsonTwo()
+    {
+        $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'pretty'));
+    }
 
 
-  public function testGenDiffByYaml()
-  {
-    $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.yml', './tests/fixtures/after.yml', 'pretty'));
-  }
+    public function testGenDiffByYaml()
+    {
+        $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.yml', './tests/fixtures/after.yml', 'pretty'));
+    }
 
-  public function testGenDiffByYamlTwo()
-  {
-    $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.yml', './tests/fixtures/after2.yml', 'pretty'));
-  }
+    public function testGenDiffByYamlTwo()
+    {
+        $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.yml', './tests/fixtures/after2.yml', 'pretty'));
+    }
 
-  public function testGenDiffByJsonTwoPlainFormat()
-  {
-    $this->assertSame($this->expected_by_plain, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'plain'));
-  }
+    public function testGenDiffByJsonTwoPlainFormat()
+    {
+        $this->assertSame($this->expected_by_plain, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'plain'));
+    }
 }
