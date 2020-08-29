@@ -6,9 +6,8 @@ function parse($data)
 {
     $resault = [];
     foreach ($data as $key => $val) {
-        $root = [];
         ['name' => $name, 'process' => $process] = get_property_action($val);
-        $resault[$key] = array_merge($root, [$name =>  $process($val, 'parse')]);
+        $resault[$key] = $process($val, 'parse');
     };
     return $resault;
 }
@@ -19,8 +18,8 @@ function get_property_action($property)
         [
             'name' => 'children',
             'check' => fn ($prop) => gettype($prop) === "object",
-            'process' => fn ($children, $f) => parse($children)
-            /*  'process' => fn ($children, $f) => $f($children) */ //почему то не работет =(   Uncaught Error: Call to undefined function parse()
+            'process' => fn ($children, $f) => ['children' =>  parse($children)]
+            /*  'process' => fn ($children, $f) => ['children' =>  parse($children)] */ //почему то не работет =(   Uncaught Error: Call to undefined function parse()
         ],
         [
             'name' => 'value',
