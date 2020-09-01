@@ -3,7 +3,9 @@
 namespace Differ\Formatters\PlainPrinter;
 
 function plain_render($resault_tree, $parent_chain = '', $resault = '')
-{
+{   
+    dd($resault_tree);
+
     foreach ($resault_tree as $name => $node) {
         [$node_status, $node_deep] = $node['meta'];
         if ($node_deep === 1) {

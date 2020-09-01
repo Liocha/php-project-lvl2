@@ -2,57 +2,69 @@
 
 namespace Differ\Formatters\PrettyPrinter;
 
+function pretty_printer($diff_tree)
+{
+    $resault =  pretty_render($diff_tree);
+    return "{\n{$resault}\n}\n";
+}
+
 function pretty_render($diff_tree, $deep = 0)
 {
     $resault = array_map(function ($node) use ($deep) {
-        $tmp = get_template($node, $deep);
+        $tmp = node_render($node, $deep);
         return "{$tmp}";
     }, $diff_tree);
 
     return implode("\n", $resault);
 }
 
-function get_template($node, $deep)
+function node_render($node, $deep)
 {
     $node_templates = [
         [
             'type' => 'removed',
             'process' => function ($node, $deep) {
-                $value_before = is_array($node['value_before']) ? print_array([$node['key'] => $node['value_before']], $deep + 1) : "{$node['key']}: " .  fix_bool_val($node['value_before']);
-                $ident = get_ident($deep);
-                return  "{$ident}  - {$value_before}";
+                $sign = '  - ';
+                $value_before = print_node([$node['key'] => $node['value_before']], $deep, $sign);
+                return "{$value_before}";
             }
         ],
         [
             'type' => 'added',
             'process' => function ($node, $deep) {
-                $value_after = is_array($node['value_after']) ? print_array([$node['key'] => $node['value_after']], $deep + 1) : "{$node['key']}: " .  fix_bool_val($node['value_after']);
+                $sign = '  + ';
                 $ident = get_ident($deep);
-                return  "{$ident}  + {$value_after}";
+                $value_after = print_node([$node['key'] => $node['value_after']], $deep, $sign);
+                return  "{$value_after}";
             }
         ],
         [
             'type' => 'nested',
-            'sign' => '  ',
             'process' => function ($node, $deep) {
+                $sign = '    ';
                 $child = pretty_render($node['children'], $deep + 1);
                 $ident = get_ident($deep);
-                return "{$ident}    {$node['key']}: {\n{$child}\n{$ident}    }";
+                return "{$ident}{$sign}{$node['key']}: {\n{$child}\n{$ident}    }";
             }
         ],
         [
             'type' => 'unchanged',
-            'process' => fn ($node, $deep) => get_ident($deep) . "    {$node['key']}: {$node['value_before']}"
+            'process' => function ($node, $deep) {
+                $sign = '    ';
+                $value_before = print_node([$node['key'] => $node['value_before']], $deep, $sign);
+                return "{$value_before}";
+            }
         ],
         [
             'type' => 'changed',
             'process' => function ($node, $deep) {
-                $value_before = is_array($node['value_before']) ? print_array([$node['key'] => $node['value_before']], $deep) : "{$node['key']}: " .  fix_bool_val($node['value_before']);
-                $value_after = is_array($node['value_after']) ? print_array([$node['key'] => $node['value_after']], $deep) :  "{$node['key']}: " . fix_bool_val($node['value_after']);
-                return     get_ident($deep) . "  - {$value_before}\n" . get_ident($deep) . "  + {$value_after}";
+                $sign_before = '  - ';
+                $sign_after = '  + ';
+                $value_before = print_node([$node['key'] => $node['value_before']], $deep, $sign_before);
+                $value_after = print_node([$node['key'] => $node['value_after']], $deep, $sign_after);
+                return  "{$value_before}\n{$value_after}";
             }
-        ]
-
+        ],
     ];
 
     foreach ($node_templates as $node_template) {
@@ -83,13 +95,14 @@ function get_ident($deep)
     return $resault;
 }
 
-function print_array($items, $deep, $space = '')
+function print_node($items, $deep, $sign = '    ')
 {
+    $ident = get_ident($deep);
     foreach ($items as $key => $val) {
         if (is_array($val) && count($val) === 1 && array_key_exists('children', $val)) {
-            $resault[] = $space . "{$key}: {\n" . print_array($val['children'], $deep + 1, get_ident($deep + 1)) . "\n" . get_ident($deep) . "}";
+            $resault[] = "{$ident}{$sign}{$key}: {\n" . print_node($val['children'], $deep + 1) . "\n{$ident}    }";
         } else {
-            $resault[] = get_ident($deep) . "    {$key}: {$val}";
+            $resault[] = "{$ident}{$sign}{$key}: " . fix_bool_val($val);
         }
     }
 

@@ -19,7 +19,8 @@ function get_property_action($property)
             'name' => 'children',
             'check' => fn ($prop) => gettype($prop) === "object",
             'process' => fn ($children, $f) => ['children' =>  parse($children)]
-            /*  'process' => fn ($children, $f) => ['children' =>  parse($children)] */ //почему то не работет =(   Uncaught Error: Call to undefined function parse()
+            /* 'process' => fn ($children, $f) => ['children' =>  parse($children)]
+            почему то не работет =(   Uncaught Error: Call to undefined function parse() */
         ],
         [
             'name' => 'value',
