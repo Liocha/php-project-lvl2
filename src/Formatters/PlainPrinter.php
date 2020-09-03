@@ -2,58 +2,72 @@
 
 namespace Differ\Formatters\PlainPrinter;
 
-function plain_render($resault_tree, $parent_chain = '', $resault = '')
-{   
-    dd($resault_tree);
+function plain_printer($diff_tree)
+{
+    $resault =  plain_render($diff_tree);
+    return "{$resault}\n";
+}
 
-    foreach ($resault_tree as $name => $node) {
-        [$node_status, $node_deep] = $node['meta'];
-        if ($node_deep === 1) {
-            $parent_chain = '';
-        }
-        if (have_chilsdren($node)) {
-            if ($node_status === 'old') {
-                $resault = "{$resault}Property '" . get_parent_chain($parent_chain, $name) . "' was removed\n";
-            } elseif ($node_status === 'new') {
-                $resault = "{$resault}Property '" . get_parent_chain($parent_chain, $name) .
-                    "' was added with value: 'complex value'\n";
-            } else {
-                $resault = $resault . plain_print_tree(get_children($node), $parent_chain . $name);
+function plain_render($diff_tree, $parent_chain = '')
+{
+    $resault = array_map(function ($node) use ($parent_chain) {
+        $tmp = node_render($node, $parent_chain);
+        return "{$tmp}";
+    }, $diff_tree);
+
+    $resault = array_diff($resault, array(''));
+
+    return implode("\n", $resault);
+}
+
+
+
+function node_render($node, $parent_chain)
+{
+    $node_templates = [
+        [
+            'type' => 'removed',
+            'process' => function ($node, $parent_chain) {
+                $parent_chain = strlen($parent_chain) === 0 ?  "'{$node['key']}'" : "'{$parent_chain}.{$node['key']}'";
+                return  "Property {$parent_chain} was removed";
             }
-        } else {
-            if ($node_status === 'old') {
-                $tmp = "Property '" . get_parent_chain($parent_chain, $name) . "' was removed\n";
-                $resault = $resault . $tmp;
-            } elseif ($node_status === 'new') {
-                $new_val = fix_bol_val($node['new_val']);
-                $tmp = "Property '" . get_parent_chain($parent_chain, $name) . "' was added with value: '{$new_val}'\n";
-                $resault = $resault . $tmp;
-            } elseif ($node_status === 'mod') {
-                $new_val = fix_bol_val($node['new_val']);
-                $old_val = fix_bol_val($node['old_val']);
-                $tmp = "Property '" . get_parent_chain($parent_chain, $name) .
-                    "' was changed. From '{$old_val}' to '{$new_val}'\n";
-                $resault = $resault . $tmp;
+        ],
+        [
+            'type' => 'added',
+            'process' => function ($node, $parent_chain) {
+                $value =  is_array($node['value_after']) ? "[complex value]" :
+                                                           "'" . fix_bol_val($node['value_after']) . "'";
+                $parent_chain = strlen($parent_chain) === 0 ?  "'{$node['key']}'" : "'{$parent_chain}.{$node['key']}'";
+                return  "Property {$parent_chain} was added with value: {$value}";
             }
+        ],
+        [
+            'type' => 'nested',
+            'process' => function ($node, $parent_chain) {
+                $parent_chain = strlen($parent_chain) === 0 ?  "{$node['key']}" : "{$parent_chain}.{$node['key']}";
+                return plain_render($node['children'], $parent_chain);
+            }
+        ],
+        [
+            'type' => 'changed',
+            'process' => function ($node, $parent_chain) {
+                $parent_chain = strlen($parent_chain) === 0 ?  "'{$node['key']}'" :
+                                                               "'{$parent_chain}.{$node['key']}'";
+                $value_before = is_array($node['value_before']) ? "[complex value]" :
+                                                                  "'" . fix_bol_val($node['value_before']) . "'";
+                $value_after = is_array($node['value_after']) ?  "[complex value]" :
+                                                                 "'" .  fix_bol_val($node['value_after']) . "'";
+                return  "Property {$parent_chain} was updated. From {$value_before} to {$value_after}";
+            }
+        ],
+    ];
+
+    foreach ($node_templates as $node_template) {
+        ['type' => $type, 'process' => $process] = $node_template;
+        if ($type === $node['type']) {
+            return $process($node, $parent_chain);
         }
     }
-
-    return $resault;
-}
-
-function have_chilsdren($node)
-{
-    return  count($node['children']) > 0;
-}
-
-function get_children($node)
-{
-    return $node['children'];
-}
-
-function get_parent_chain($parent_chain, $name)
-{
-    return $parent_chain === '' ? $name : "{$parent_chain}.{$name}";
 }
 
 function fix_bol_val($val)

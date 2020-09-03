@@ -33,7 +33,6 @@ function node_render($node, $deep)
             'type' => 'added',
             'process' => function ($node, $deep) {
                 $sign = '  + ';
-                $ident = get_ident($deep);
                 $value_after = print_node([$node['key'] => $node['value_after']], $deep, $sign);
                 return  "{$value_after}";
             }

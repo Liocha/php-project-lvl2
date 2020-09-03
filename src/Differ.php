@@ -5,7 +5,8 @@ namespace Differ\Differ;
 use Symfony\Component\Yaml\Yaml;
 
 use function Differ\Formatters\PrettyPrinter\pretty_printer;
-use function Differ\Formatters\PlainPrinter\plain_render;
+use function Differ\Formatters\PlainPrinter\plain_printer;
+use function Differ\Formatters\JsonPrinter\json_printer;
 use function Differ\Parsers\parse;
 
 function run()
@@ -66,9 +67,11 @@ function build_diff_tree($first_file_assoc, $second_file_assoc)
         if ($type === 'nested') {
             $first_children = $first_file_assoc[$node_key]['children'];
             $second_children = $second_file_assoc[$node_key]['children'];
-            return ['key' => $node_key,
-                    'type' => $type,
-                    'children' => build_diff_tree($first_children, $second_children)];
+            return [
+                'key' => $node_key,
+                'type' => $type,
+                'children' => build_diff_tree($first_children, $second_children)
+            ];
         }
         return $process($node_key, $first_file_assoc, $second_file_assoc, $type);
     }, $all_node_names);
@@ -90,16 +93,16 @@ function create_node($node_key, $first_assoc, $second_assoc)
         [
             'type' => 'removed',
             'check' => fn ($node_key, $first_assoc, $second_assoc) =>
-                    array_key_exists($node_key, $first_assoc) && !array_key_exists($node_key, $second_assoc),
+            array_key_exists($node_key, $first_assoc) && !array_key_exists($node_key, $second_assoc),
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                    ['key' => $node_key, 'type' => $type, 'value_before' => $first_assoc[$node_key]]
+            ['key' => $node_key, 'type' => $type, 'value_before' => $first_assoc[$node_key]]
         ],
         [
             'type' => 'added',
             'check' => fn ($node_key, $first_assoc, $second_assoc) =>
-                    !array_key_exists($node_key, $first_assoc) && array_key_exists($node_key, $second_assoc),
+            !array_key_exists($node_key, $first_assoc) && array_key_exists($node_key, $second_assoc),
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                    ['key' => $node_key, 'type' => $type, 'value_after' => $second_assoc[$node_key]]
+            ['key' => $node_key, 'type' => $type, 'value_after' => $second_assoc[$node_key]]
         ],
         [
             'type' => 'changed',
@@ -110,37 +113,37 @@ function create_node($node_key, $first_assoc, $second_assoc)
                 return false;
             },
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                    ['key' => $node_key, 'type' =>  $type, 'value_before' =>
-                            $first_assoc[$node_key], 'value_after' => $second_assoc[$node_key]]
+            ['key' => $node_key, 'type' =>  $type, 'value_before' =>
+            $first_assoc[$node_key], 'value_after' => $second_assoc[$node_key]]
         ],
         [
             'type' => 'nested',
             'check' => function ($node_key, $first_assoc, $second_assoc) {
                 if (is_array($first_assoc[$node_key]) && is_array($second_assoc[$node_key])) {
                     return array_key_exists('children', $first_assoc[$node_key]) &&
-                           array_key_exists('children', $second_assoc[$node_key]);
+                        array_key_exists('children', $second_assoc[$node_key]);
                 } else {
                     return false;
                 }
             },
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                          ['key' => $node_key, 'type' => $type, 'children' =>
-                                    [$first_assoc['children'], $second_assoc['children']]]
+            ['key' => $node_key, 'type' => $type, 'children' =>
+            [$first_assoc['children'], $second_assoc['children']]]
         ],
         [
             'type' => 'unchanged',
             'check' => fn ($node_key, $first_assoc, $second_assoc) =>
-                        $first_assoc[$node_key] === $second_assoc[$node_key],
+            $first_assoc[$node_key] === $second_assoc[$node_key],
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                        ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]]
+            ['key' => $node_key, 'type' =>  $type, 'value_before' => $first_assoc[$node_key]]
         ],
         [
             'type' => 'changed',
             'check' => fn ($node_key, $first_assoc, $second_assoc) =>
-                        $first_assoc[$node_key] != $second_assoc[$node_key],
+            $first_assoc[$node_key] != $second_assoc[$node_key],
             'process' => fn ($node_key, $first_assoc, $second_assoc, $type) =>
-                        ['key' => $node_key, 'type' =>  $type, 'value_before' =>
-                                 $first_assoc[$node_key], 'value_after' => $second_assoc[$node_key]]
+            ['key' => $node_key, 'type' =>  $type, 'value_before' =>
+            $first_assoc[$node_key], 'value_after' => $second_assoc[$node_key]]
         ]
     ];
 
@@ -161,7 +164,9 @@ function render_by_format($diff_tree, $format)
         case 'pretty':
             return pretty_printer($diff_tree);
         case 'plain':
-            return plain_render($diff_tree);
+            return plain_printer($diff_tree);
+        case 'json':
+            return json_printer($diff_tree);
         default:
             throw new \Exception("Unknown output format, current value is {$format}");
     }
