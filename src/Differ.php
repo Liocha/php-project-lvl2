@@ -53,7 +53,6 @@ function get_value_type($node, $node2)
     }
 }
 
-
 function create_node($node_key, $first_assoc, $second_assoc)
 {
     $node_types = [
@@ -124,11 +123,6 @@ function create_node($node_key, $first_assoc, $second_assoc)
 
     return [];
 }
-
-
-
-
-
 
 function get_type_file($path_to_file)
 {

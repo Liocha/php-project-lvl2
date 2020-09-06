@@ -33,11 +33,6 @@ $format = mb_strtolower($args["--format"]);
 $path_to_first_file = $args["<firstFile>"];
 $path_to_second_file = $args["<secondFile>"];
 
-
 $resault = gen_diff($path_to_first_file, $path_to_second_file, $format);
 
 echo $resault;
-
-
-
-
