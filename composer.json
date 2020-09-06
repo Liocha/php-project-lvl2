@@ -18,7 +18,8 @@
             "src/Parsers.php",
             "src/Formatters/PrettyPrinter.php",
             "src/Formatters/PlainPrinter.php",
-            "src/Formatters/JsonPrinter.php"
+            "src/Formatters/JsonPrinter.php",
+            "src/Formatters/Formatters.php"
         ]
     },
     "require-dev": {

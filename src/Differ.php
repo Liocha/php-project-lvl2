@@ -2,41 +2,8 @@
 
 namespace Differ\Differ;
 
-use Symfony\Component\Yaml\Yaml;
-
-use function Differ\Formatters\PrettyPrinter\pretty_printer;
-use function Differ\Formatters\PlainPrinter\plain_printer;
-use function Differ\Formatters\JsonPrinter\json_printer;
+use function Differ\Formatters\Formatters\render_by_format;
 use function Differ\Parsers\parse;
-
-function run()
-{
-    $doc = <<<DOC
-		Generate diff.
-		
-		Usage:
-			gendiff (-h|--help)
-			gendiff (-v|--version)
-			gendiff [--format <fmt>] <firstFile> <secondFile>
-		
-		Options:
-			-h --help                     Show this screen
-			-v --version                  Show version
-			--format <fmt>                Report format [default: pretty]
-		DOC;
-
-    $args = \Docopt::handle($doc, array('version' => "0.0.1"));
-
-    $format = mb_strtolower($args["--format"]);
-
-    $path_to_first_file = $args["<firstFile>"];
-    $path_to_second_file = $args["<secondFile>"];
-
-
-    $resault = gen_diff($path_to_first_file, $path_to_second_file, $format);
-
-    echo $resault;
-}
 
 function gen_diff($path_to_first_file, $path_to_second_file, $format)
 {
@@ -47,11 +14,11 @@ function gen_diff($path_to_first_file, $path_to_second_file, $format)
     $type_first_file = get_type_file($path_to_first_file);
     $type_second_file = get_type_file($path_to_second_file);
 
-    $first_file_obj =  converting_data_to_obj($data_from_first_file, $type_first_file);
-    $second_file_obj = converting_data_to_obj($data_from_second_file, $type_second_file);
+    $first_file_obj =  parse($data_from_first_file, $type_first_file);
+    $second_file_obj = parse($data_from_second_file, $type_second_file);
 
-    $first_file_assoc = parse($first_file_obj);
-    $second_file_assoc = parse($second_file_obj);
+    $first_file_assoc = converting_data_to_assoc($first_file_obj);
+    $second_file_assoc = converting_data_to_assoc($second_file_obj);
 
     $dif_tree =  build_diff_tree($first_file_assoc, $second_file_assoc);
 
@@ -158,34 +125,10 @@ function create_node($node_key, $first_assoc, $second_assoc)
     return [];
 }
 
-function render_by_format($diff_tree, $format)
-{
-    switch ($format) {
-        case 'pretty':
-            return pretty_printer($diff_tree);
-        case 'plain':
-            return plain_printer($diff_tree);
-        case 'json':
-            return json_printer($diff_tree);
-        default:
-            throw new \Exception("Unknown output format, current value is {$format}");
-    }
-}
 
 
-function converting_data_to_obj($data, $type)
-{
-    switch ($type) {
-        case 'json':
-            return json_decode($data);
-        case 'yml':
-            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
-        case 'yuml':
-            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
-        default:
-            throw new \Exception("type '{$type}' not supported");
-    }
-}
+
+
 
 function get_type_file($path_to_file)
 {
@@ -213,4 +156,39 @@ function get_content($path_to_file)
         throw new \Exception("No such file or directory {$absolute_path}");
     }
     return $data;
+}
+
+function converting_data_to_assoc($data)
+{
+    $resault = [];
+    foreach ($data as $key => $val) {
+        ['name' => $name, 'process' => $process] = get_property_action($val);
+        $resault[$key] = $process($val, 'parse');
+    };
+    return $resault;
+}
+
+function get_property_action($property)
+{
+    $property_actions = [
+        [
+            'name' => 'children',
+            'check' => fn ($prop) => gettype($prop) === "object",
+            'process' => fn ($children, $f) => ['children' =>  converting_data_to_assoc($children)]
+            /* 'process' => fn ($children, $f) => ['children' =>  parse($children)]
+            почему то не работет =(   Uncaught Error: Call to undefined function parse() */
+        ],
+        [
+            'name' => 'value',
+            'check' => fn ($prop) => gettype($prop) !== "object",
+            'process' => fn ($prop, $f) => $prop
+        ]
+    ];
+
+    foreach ($property_actions as $property_action) {
+        ['name' => $name, 'check' => $check, 'process' => $process] = $property_action;
+        if ($check($property)) {
+            return ['name' => $name, 'process' => $process];
+        }
+    }
 }

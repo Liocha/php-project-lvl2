@@ -10,8 +10,34 @@ if (file_exists($autoloadPath1)) {
     require_once $autoloadPath2;
 }
 
+use function Differ\Differ\gen_diff;
+
+$doc = <<<DOC
+    Generate diff.
+    
+    Usage:
+        gendiff (-h|--help)
+        gendiff (-v|--version)
+        gendiff [--format <fmt>] <firstFile> <secondFile>
+    
+    Options:
+        -h --help                     Show this screen
+        -v --version                  Show version
+        --format <fmt>                Report format [default: pretty]
+    DOC;
+
+$args = \Docopt::handle($doc, array('version' => "0.0.1"));
+
+$format = mb_strtolower($args["--format"]);
+
+$path_to_first_file = $args["<firstFile>"];
+$path_to_second_file = $args["<secondFile>"];
 
 
-use function Differ\Differ\run;
+$resault = gen_diff($path_to_first_file, $path_to_second_file, $format);
 
-run();
+echo $resault;
+
+
+
+
