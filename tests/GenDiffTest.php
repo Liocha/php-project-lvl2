@@ -4,13 +4,13 @@ namespace Differ\Tests;
 
 use PHPUnit\Framework\TestCase;
 
-use function Differ\Differ\gen_diff;
+use function Differ\Differ\genDiff;
 
 class GenDiffTest extends TestCase
 {
     private $expected;
-    private $expected_2;
-    private $expected_by_plain;
+    private $expected2;
+    private $expectedByPlain;
 
     public function setUp(): void
     {
@@ -25,7 +25,7 @@ class GenDiffTest extends TestCase
 
         EXP;
 
-        $this->expected_2 = <<<'EXP'
+        $this->expected2 = <<<'EXP'
         {
             common: {
                 setting1: Value 1
@@ -75,7 +75,7 @@ class GenDiffTest extends TestCase
 
         EXP;
 
-        $this->expected_by_plain = <<<'EXP'
+        $this->expectedByPlain = <<<'EXP'
         Property 'common.setting2' was removed
         Property 'common.setting3' was updated. From 'true' to [complex value]
         Property 'common.setting6.doge.wow' was updated. From 'too much' to 'so much'
@@ -90,39 +90,39 @@ class GenDiffTest extends TestCase
 
         EXP;
 
-        $this->expected_by_json = <<<'EXP'
-        {"0":{"key":"common","type":"nested","children":{"0":{"key":"setting1","type":"unchanged","value_before":"Value 1"},"1":{"key":"setting2","type":"removed","value_before":200},"2":{"key":"setting3","type":"changed","value_before":true,"value_after":{"children":{"key":"value"}}},"3":{"key":"setting6","type":"nested","children":{"0":{"key":"key","type":"unchanged","value_before":"value"},"1":{"key":"doge","type":"nested","children":[{"key":"wow","type":"changed","value_before":"too much","value_after":"so much"}]},"3":{"key":"ops","type":"added","value_after":"vops"}}},"4":{"key":"follow","type":"added","value_after":false},"7":{"key":"setting4","type":"added","value_after":"blah blah"},"8":{"key":"setting5","type":"added","value_after":{"children":{"key5":"value5"}}}}},"1":{"key":"group1","type":"nested","children":[{"key":"baz","type":"changed","value_before":"bas","value_after":"bars"},{"key":"foo","type":"unchanged","value_before":"bar"},{"key":"nest","type":"changed","value_before":{"children":{"key":"value"}},"value_after":"str"}]},"2":{"key":"group2","type":"removed","value_before":{"children":{"abc":12345,"deep":{"children":{"id":45}}}}},"5":{"key":"group3","type":"added","value_after":{"children":{"fee":100500,"deep":{"children":{"id":{"children":{"number":45}}}}}}}}
+        $this->expectedByJson = <<<'EXP'
+        {"0":{"key":"common","type":"nested","children":{"0":{"key":"setting1","type":"unchanged","valueBefore":"Value 1"},"1":{"key":"setting2","type":"removed","valueBefore":200},"2":{"key":"setting3","type":"changed","valueBefore":true,"valueAfter":{"children":{"key":"value"}}},"3":{"key":"setting6","type":"nested","children":{"0":{"key":"key","type":"unchanged","valueBefore":"value"},"1":{"key":"doge","type":"nested","children":[{"key":"wow","type":"changed","valueBefore":"too much","valueAfter":"so much"}]},"3":{"key":"ops","type":"added","valueAfter":"vops"}}},"4":{"key":"follow","type":"added","valueAfter":false},"7":{"key":"setting4","type":"added","valueAfter":"blah blah"},"8":{"key":"setting5","type":"added","valueAfter":{"children":{"key5":"value5"}}}}},"1":{"key":"group1","type":"nested","children":[{"key":"baz","type":"changed","valueBefore":"bas","valueAfter":"bars"},{"key":"foo","type":"unchanged","valueBefore":"bar"},{"key":"nest","type":"changed","valueBefore":{"children":{"key":"value"}},"valueAfter":"str"}]},"2":{"key":"group2","type":"removed","valueBefore":{"children":{"abc":12345,"deep":{"children":{"id":45}}}}},"5":{"key":"group3","type":"added","valueAfter":{"children":{"fee":100500,"deep":{"children":{"id":{"children":{"number":45}}}}}}}}
         EXP;
     }
 
     public function testGenDiffByJson()
     {
-        $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.json', './tests/fixtures/after.json', 'pretty'));
+        $this->assertSame($this->expected, genDiff('./tests/fixtures/before.json', './tests/fixtures/after.json', 'pretty'));
     }
 
     public function testGenDiffByJsonTwo()
     {
-        $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'pretty'));
+        $this->assertSame($this->expected2, genDiff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'pretty'));
     }
 
 
     public function testGenDiffByYaml()
     {
-        $this->assertSame($this->expected, gen_diff('./tests/fixtures/before.yml', './tests/fixtures/after.yml', 'pretty'));
+        $this->assertSame($this->expected, genDiff('./tests/fixtures/before.yml', './tests/fixtures/after.yml', 'pretty'));
     }
 
     public function testGenDiffByYamlTwo()
     {
-        $this->assertSame($this->expected_2, gen_diff('./tests/fixtures/before2.yml', './tests/fixtures/after2.yml', 'pretty'));
+        $this->assertSame($this->expected2, genDiff('./tests/fixtures/before2.yml', './tests/fixtures/after2.yml', 'pretty'));
     }
 
     public function testGenDiffByJsonToPlainFormat()
     {
-        $this->assertSame($this->expected_by_plain, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'plain'));
+        $this->assertSame($this->expectedByPlain, genDiff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'plain'));
     }
 
     public function testGenDiffByJsonToJsonFormat()
     {
-        $this->assertSame($this->expected_by_json, gen_diff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'json'));
+        $this->assertSame($this->expectedByJson, genDiff('./tests/fixtures/before2.json', './tests/fixtures/after2.json', 'json'));
     }
 }

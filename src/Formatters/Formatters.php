@@ -2,19 +2,19 @@
 
 namespace Differ\Formatters\Formatters;
 
-use function Differ\Formatters\PrettyPrinter\pretty_printer;
-use function Differ\Formatters\PlainPrinter\plain_printer;
-use function Differ\Formatters\JsonPrinter\json_printer;
+use function Differ\Formatters\PrettyPrinter\prettyPrinter;
+use function Differ\Formatters\PlainPrinter\plainPrinter;
+use function Differ\Formatters\JsonPrinter\jsonPrinter;
 
-function render_by_format($diff_tree, $format)
+function renderByFormat($diffTree, $format)
 {
     switch (mb_strtolower($format)) {
         case 'pretty':
-            return pretty_printer($diff_tree);
+            return prettyPrinter($diffTree);
         case 'plain':
-            return plain_printer($diff_tree);
+            return plainPrinter($diffTree);
         case 'json':
-            return json_printer($diff_tree);
+            return jsonPrinter($diffTree);
         default:
             throw new \Exception("Unknown output format, current value is {$format}");
     }
