@@ -125,8 +125,14 @@ function get_file_data($path_to_file)
     $current_working_directory = posix_getcwd();
     ['extension' => $extension, 'dirname' => $dir_name, 'basename' => $base_name] = pathinfo($path_to_file);
 
-    $path = $dir_name[0] === '/' ? "{$dir_name}/{$base_name}" : "{$current_working_directory}/{$dir_name}/{$base_name}";
-    $data = file_get_contents($path);
+    $filepath = $dir_name[0] === '/' ? "{$dir_name}/{$base_name}" :
+        "{$current_working_directory}/{$dir_name}/{$base_name}";
+
+    if (!file_exists($filepath)) {
+        throw new \Exception("File '$filepath' does not exist");
+    }
+
+    $data = file_get_contents($filepath);
 
     return [$data, $extension];
 }
