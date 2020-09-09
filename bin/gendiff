@@ -1,6 +1,8 @@
 #!/usr/bin/env php
 <?php
 
+use function Differ\Differ\gen_diff;
+
 $autoloadPath1 = __DIR__ . '/../../../autoload.php';
 $autoloadPath2 = __DIR__ . '/../vendor/autoload.php';
 
@@ -9,8 +11,6 @@ if (file_exists($autoloadPath1)) {
 } else {
     require_once $autoloadPath2;
 }
-
-use function Differ\Differ\gen_diff;
 
 $doc = <<<DOC
     Generate diff.
@@ -28,10 +28,7 @@ $doc = <<<DOC
 
 $args = \Docopt::handle($doc, array('version' => "0.0.1"));
 
-$format = mb_strtolower($args["--format"]);
-
-$path_to_first_file = $args["<firstFile>"];
-$path_to_second_file = $args["<secondFile>"];
+['<firstFile>' => $path_to_first_file, '<secondFile>' => $path_to_second_file, '--format' => $format] = $args;
 
 $resault = gen_diff($path_to_first_file, $path_to_second_file, $format);
 

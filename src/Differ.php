@@ -7,15 +7,11 @@ use function Differ\Parsers\parse;
 
 function gen_diff($path_to_first_file, $path_to_second_file, $format)
 {
-    $data_from_first_file = get_content($path_to_first_file);
-    $data_from_second_file = get_content($path_to_second_file);
+    $first_file_data = get_file_data($path_to_first_file);
+    $second_file_data = get_file_data($path_to_second_file);
 
-
-    $type_first_file = get_type_file($path_to_first_file);
-    $type_second_file = get_type_file($path_to_second_file);
-
-    $first_file_obj =  parse($data_from_first_file, $type_first_file);
-    $second_file_obj = parse($data_from_second_file, $type_second_file);
+    $first_file_obj =  parse($first_file_data);
+    $second_file_obj = parse($second_file_data);
 
     $first_file_assoc = converting_data_to_assoc($first_file_obj);
     $second_file_assoc = converting_data_to_assoc($second_file_obj);
@@ -124,32 +120,15 @@ function create_node($node_key, $first_assoc, $second_assoc)
     return [];
 }
 
-function get_type_file($path_to_file)
-{
-    if (preg_match('/\.([a-z\d]+)$/i', $path_to_file, $matches)) {
-        $data_type = $matches[1];
-    } else {
-        throw new \Exception("file type undefined, current path is '{$path_to_file}'");
-    }
-    return $data_type;
-}
-
-function is_absolute_path($path)
-{
-    return $path[0] === '/';
-}
-
-function get_content($path_to_file)
+function get_file_data($path_to_file)
 {
     $current_working_directory = posix_getcwd();
-    $absolute_path = is_absolute_path($path_to_file) ? $path_to_file : "{$current_working_directory}/{$path_to_file}";
+    ['extension' => $extension, 'dirname' => $dir_name, 'basename' => $base_name] = pathinfo($path_to_file);
 
-    $data = file_get_contents($absolute_path);
+    $path = $dir_name[0] === '/' ? "{$dir_name}/{$base_name}" : "{$current_working_directory}/{$dir_name}/{$base_name}";
+    $data = file_get_contents($path);
 
-    if (!$data) {
-        throw new \Exception("No such file or directory {$absolute_path}");
-    }
-    return $data;
+    return [$data, $extension];
 }
 
 function converting_data_to_assoc($data)

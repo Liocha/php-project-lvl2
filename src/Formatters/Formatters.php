@@ -8,7 +8,7 @@ use function Differ\Formatters\JsonPrinter\json_printer;
 
 function render_by_format($diff_tree, $format)
 {
-    switch ($format) {
+    switch (mb_strtolower($format)) {
         case 'pretty':
             return pretty_printer($diff_tree);
         case 'plain':
