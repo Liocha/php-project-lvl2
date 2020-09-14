@@ -25,11 +25,11 @@ function buildDiffTree($firstFileObj, $secondFileObj)
     return array_map(function ($nodeKey) use ($firstFileObj, $secondFileObj) {
         ['type' => $type, 'process' => $process] = createNode($nodeKey, $firstFileObj, $secondFileObj);
         if ($type === 'nested') {
-            $obj = new \stdClass();
-            $obj->key = $nodeKey;
-            $obj->type = 'nested';
-            $obj->children = buildDiffTree($firstFileObj->$nodeKey, $secondFileObj->$nodeKey);
-            return $obj;
+            $node = new \stdClass();
+            $node->key = $nodeKey;
+            $node->type = 'nested';
+            $node->children = buildDiffTree($firstFileObj->$nodeKey, $secondFileObj->$nodeKey);
+            return $node;
         }
         return $process($nodeKey, $firstFileObj, $secondFileObj, $type);
     }, $allNodeNames);
@@ -43,11 +43,11 @@ function createNode($nodeKey, $firstFileObj, $secondFileObj)
             'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
             property_exists($firstFileObj, $nodeKey) && !property_exists($secondFileObj, $nodeKey),
             'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $obj = new \stdClass();
-                $obj->key = $nodeKey;
-                $obj->type = $type;
-                $obj->valueBefore = $firstFileObj->$nodeKey;
-                return $obj;
+                $node = new \stdClass();
+                $node->key = $nodeKey;
+                $node->type = $type;
+                $node->valueBefore = $firstFileObj->$nodeKey;
+                return $node;
             }
 
         ],
@@ -56,11 +56,11 @@ function createNode($nodeKey, $firstFileObj, $secondFileObj)
             'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
             !property_exists($firstFileObj, $nodeKey) && property_exists($secondFileObj, $nodeKey),
             'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $obj = new \stdClass();
-                $obj->key = $nodeKey;
-                $obj->type = $type;
-                $obj->valueAfter = $secondFileObj->$nodeKey;
-                return $obj;
+                $node = new \stdClass();
+                $node->key = $nodeKey;
+                $node->type = $type;
+                $node->valueAfter = $secondFileObj->$nodeKey;
+                return $node;
             }
         ],
         [
@@ -69,12 +69,12 @@ function createNode($nodeKey, $firstFileObj, $secondFileObj)
                 return gettype($firstFileObj->$nodeKey) !==  gettype($secondFileObj->$nodeKey) ? true : false;
             },
             'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $obj = new \stdClass();
-                $obj->key = $nodeKey;
-                $obj->type = $type;
-                $obj->valueBefore = $firstFileObj->$nodeKey;
-                $obj->valueAfter = $secondFileObj->$nodeKey;
-                return $obj;
+                $node = new \stdClass();
+                $node->key = $nodeKey;
+                $node->type = $type;
+                $node->valueBefore = $firstFileObj->$nodeKey;
+                $node->valueAfter = $secondFileObj->$nodeKey;
+                return $node;
             }
 
         ],
@@ -91,11 +91,11 @@ function createNode($nodeKey, $firstFileObj, $secondFileObj)
             'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
             $firstFileObj->$nodeKey === $secondFileObj->$nodeKey,
             'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $obj = new \stdClass();
-                $obj->key = $nodeKey;
-                $obj->type = $type;
-                $obj->valueBefore = $firstFileObj->$nodeKey;
-                return $obj;
+                $node = new \stdClass();
+                $node->key = $nodeKey;
+                $node->type = $type;
+                $node->valueBefore = $firstFileObj->$nodeKey;
+                return $node;
             }
 
         ],
@@ -104,12 +104,12 @@ function createNode($nodeKey, $firstFileObj, $secondFileObj)
             'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
             $firstFileObj->$nodeKey != $secondFileObj->$nodeKey,
             'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $obj = new \stdClass();
-                $obj->key = $nodeKey;
-                $obj->type = $type;
-                $obj->valueBefore = $firstFileObj->$nodeKey;
-                $obj->valueAfter = $secondFileObj->$nodeKey;
-                return $obj;
+                $node = new \stdClass();
+                $node->key = $nodeKey;
+                $node->type = $type;
+                $node->valueBefore = $firstFileObj->$nodeKey;
+                $node->valueAfter = $secondFileObj->$nodeKey;
+                return $node;
             }
         ]
     ];
