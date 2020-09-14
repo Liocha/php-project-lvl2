@@ -28,35 +28,35 @@ function nodeRender($node, $parentChain)
         [
             'type' => 'removed',
             'process' => function ($node, $parentChain) {
-                $parentChain = strlen($parentChain) === 0 ?  "'{$node['key']}'" : "'{$parentChain}.{$node['key']}'";
+                $parentChain = strlen($parentChain) === 0 ?  "'{$node->key}'" : "'{$parentChain}.{$node->key}'";
                 return  "Property {$parentChain} was removed";
             }
         ],
         [
             'type' => 'added',
             'process' => function ($node, $parentChain) {
-                $value =  is_array($node['valueAfter']) ? "[complex value]" :
-                    "'" . fixBolVal($node['valueAfter']) . "'";
-                $parentChain = strlen($parentChain) === 0 ?  "'{$node['key']}'" : "'{$parentChain}.{$node['key']}'";
+                $value =  is_object($node->valueAfter) ? "[complex value]" :
+                    "'" . fixBolVal($node->valueAfter) . "'";
+                $parentChain = strlen($parentChain) === 0 ?  "'{$node->key}'" : "'{$parentChain}.{$node->key}'";
                 return  "Property {$parentChain} was added with value: {$value}";
             }
         ],
         [
             'type' => 'nested',
             'process' => function ($node, $parentChain) {
-                $parent_chain = strlen($parentChain) === 0 ?  "{$node['key']}" : "{$parentChain}.{$node['key']}";
-                return plainRender($node['children'], $parent_chain);
+                $parent_chain = strlen($parentChain) === 0 ?  "{$node->key}" : "{$parentChain}.{$node->key}";
+                return plainRender($node->children, $parent_chain);
             }
         ],
         [
             'type' => 'changed',
             'process' => function ($node, $parentChain) {
                 $parentChain = strlen($parentChain) === 0 ?  "'{$node['key']}'" :
-                    "'{$parentChain}.{$node['key']}'";
-                $valueBefore = is_array($node['valueBefore']) ? "[complex value]" :
-                    "'" . fixBolVal($node['valueBefore']) . "'";
-                $valueAfter = is_array($node['valueAfter']) ?  "[complex value]" :
-                    "'" .  fixBolVal($node['valueAfter']) . "'";
+                    "'{$parentChain}.{$node->key}'";
+                $valueBefore = is_object($node->valueBefore) ? "[complex value]" :
+                    "'" . fixBolVal($node->valueBefore) . "'";
+                $valueAfter = is_object($node->valueAfter) ?  "[complex value]" :
+                    "'" .  fixBolVal($node->valueAfter) . "'";
                 return  "Property {$parentChain} was updated. From {$valueBefore} to {$valueAfter}";
             }
         ],
@@ -64,7 +64,7 @@ function nodeRender($node, $parentChain)
 
     foreach ($nodeTemplates as $nodeTemplate) {
         ['type' => $type, 'process' => $process] = $nodeTemplate;
-        if ($type === $node['type']) {
+        if ($type === $node->type) {
             return $process($node, $parentChain);
         }
     }
