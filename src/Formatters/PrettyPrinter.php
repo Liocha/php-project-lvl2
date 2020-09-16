@@ -2,6 +2,8 @@
 
 namespace Differ\Formatters\PrettyPrinter;
 
+use function Differ\Helpers\fixBoolVal;
+
 function prettyPrinter($diffTree)
 {
     $resault =  prettyRender($diffTree);
@@ -11,67 +13,38 @@ function prettyPrinter($diffTree)
 function prettyRender($diffTree, $deep = 0)
 {
     $resault = array_map(function ($node) use ($deep) {
-        $tmp = nodeRender($node, $deep);
-        return "{$tmp}";
+        $type = $node->type;
+        if ($type === 'removed') {
+            $sign = '  - ';
+            $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
+            return "{$valueBefore}";
+        }
+        if ($type === 'added') {
+            $sign = '  + ';
+            $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $sign);
+            return  "{$valueAfter}";
+        }
+        if ($type === 'nested') {
+            $sign = '    ';
+            $child = prettyRender($node->children, $deep + 1);
+            $ident = getIdent($deep);
+            return "{$ident}{$sign}{$node->key}: {\n{$child}\n{$ident}    }";
+        }
+        if ($type === 'changed') {
+            $signBefore = '  - ';
+            $signAfter = '  + ';
+            $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $signBefore);
+            $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $signAfter);
+            return  "{$valueBefore}\n{$valueAfter}";
+        }
+        $sign = '    ';
+        $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
+        return "{$valueBefore}";
     }, $diffTree);
 
     return implode("\n", $resault);
 }
-function nodeRender($node, $deep)
-{
-    $node_templates = [
-        [
-            'type' => 'removed',
-            'process' => function ($node, $deep) {
-                $sign = '  - ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
-                return "{$valueBefore}";
-            }
-        ],
-        [
-            'type' => 'added',
-            'process' => function ($node, $deep) {
-                $sign = '  + ';
-                $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $sign);
-                return  "{$valueAfter}";
-            }
-        ],
-        [
-            'type' => 'nested',
-            'process' => function ($node, $deep) {
-                $sign = '    ';
-                $child = prettyRender($node->children, $deep + 1);
-                $ident = getIdent($deep);
-                return "{$ident}{$sign}{$node->key}: {\n{$child}\n{$ident}    }";
-            }
-        ],
-        [
-            'type' => 'unchanged',
-            'process' => function ($node, $deep) {
-                $sign = '    ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
-                return "{$valueBefore}";
-            }
-        ],
-        [
-            'type' => 'changed',
-            'process' => function ($node, $deep) {
-                $signBefore = '  - ';
-                $signAfter = '  + ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $signBefore);
-                $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $signAfter);
-                return  "{$valueBefore}\n{$valueAfter}";
-            }
-        ],
-    ];
 
-    foreach ($node_templates as $node_template) {
-        ['type' => $type, 'process' => $process] = $node_template;
-        if ($type === $node->type) {
-            return $process($node, $deep);
-        }
-    }
-}
 
 function printNode($items, $deep, $sign = '    ')
 {
@@ -86,15 +59,6 @@ function printNode($items, $deep, $sign = '    ')
 
     return implode("\n", $resault);
 }
-
-function fixBoolVal($val)
-{
-    if (gettype($val) === 'boolean') {
-        $val = $val ? 'true' : 'false';
-    }
-    return $val;
-}
-
 
 function getIdent($deep)
 {

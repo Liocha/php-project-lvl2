@@ -4,6 +4,7 @@ namespace Differ\Differ;
 
 use function Differ\Formatters\Formatters\renderByFormat;
 use function Differ\Parsers\parse;
+use function Funct\Collection\union;
 
 function genDiff($pathToFirstFile, $pathToSecondFile, $format)
 {
@@ -18,110 +19,46 @@ function genDiff($pathToFirstFile, $pathToSecondFile, $format)
     return renderByFormat($difTree, $format);
 }
 
-function buildDiffTree($firstFileObj, $secondFileObj)
+function buildDiffTree($first, $second)
 {
-    $allNodeNames = array_unique(array_merge(array_keys((array) $firstFileObj), array_keys((array) $secondFileObj)));
+    $allNodeNames = union(array_keys(get_object_vars($first)), array_keys(get_object_vars($second)));
 
-    return array_map(function ($nodeKey) use ($firstFileObj, $secondFileObj) {
-        ['type' => $type, 'process' => $process] = createNode($nodeKey, $firstFileObj, $secondFileObj);
-        if ($type === 'nested') {
+    return array_map(function ($nodeKey) use ($first, $second) {
+        if (!property_exists($second, $nodeKey)) {
+            $node = new \stdClass();
+            $node->key = $nodeKey;
+            $node->type = 'removed';
+            $node->valueBefore = $first->$nodeKey;
+            return $node;
+        };
+        if (!property_exists($first, $nodeKey)) {
+            $node = new \stdClass();
+            $node->key = $nodeKey;
+            $node->type = 'added';
+            $node->valueAfter = $second->$nodeKey;
+            return $node;
+        };
+        if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
             $node = new \stdClass();
             $node->key = $nodeKey;
             $node->type = 'nested';
-            $node->children = buildDiffTree($firstFileObj->$nodeKey, $secondFileObj->$nodeKey);
+            $node->children = buildDiffTree($first->$nodeKey, $second->$nodeKey);
             return $node;
         }
-        return $process($nodeKey, $firstFileObj, $secondFileObj, $type);
-    }, $allNodeNames);
-}
-
-function createNode($nodeKey, $firstFileObj, $secondFileObj)
-{
-    $nodeTypes = [
-        [
-            'type' => 'removed',
-            'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
-            property_exists($firstFileObj, $nodeKey) && !property_exists($secondFileObj, $nodeKey),
-            'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $node = new \stdClass();
-                $node->key = $nodeKey;
-                $node->type = $type;
-                $node->valueBefore = $firstFileObj->$nodeKey;
-                return $node;
-            }
-
-        ],
-        [
-            'type' => 'added',
-            'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
-            !property_exists($firstFileObj, $nodeKey) && property_exists($secondFileObj, $nodeKey),
-            'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $node = new \stdClass();
-                $node->key = $nodeKey;
-                $node->type = $type;
-                $node->valueAfter = $secondFileObj->$nodeKey;
-                return $node;
-            }
-        ],
-        [
-            'type' => 'changed',
-            'check' => function ($nodeKey, $firstFileObj, $secondFileObj) {
-                return gettype($firstFileObj->$nodeKey) !==  gettype($secondFileObj->$nodeKey) ? true : false;
-            },
-            'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $node = new \stdClass();
-                $node->key = $nodeKey;
-                $node->type = $type;
-                $node->valueBefore = $firstFileObj->$nodeKey;
-                $node->valueAfter = $secondFileObj->$nodeKey;
-                return $node;
-            }
-
-        ],
-        [
-            'type' => 'nested',
-            'check' => function ($nodeKey, $firstFileObj, $secondFileObj) {
-                return is_object($firstFileObj->$nodeKey) && is_object($secondFileObj->$nodeKey) ? true : false;
-            },
-            'process' => fn ($nodeKey, $firstAssoc, $secondAssoc, $type) =>
-            ['key' => $nodeKey, 'type' => $type]
-        ],
-        [
-            'type' => 'unchanged',
-            'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
-            $firstFileObj->$nodeKey === $secondFileObj->$nodeKey,
-            'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $node = new \stdClass();
-                $node->key = $nodeKey;
-                $node->type = $type;
-                $node->valueBefore = $firstFileObj->$nodeKey;
-                return $node;
-            }
-
-        ],
-        [
-            'type' => 'changed',
-            'check' => fn ($nodeKey, $firstFileObj, $secondFileObj) =>
-            $firstFileObj->$nodeKey != $secondFileObj->$nodeKey,
-            'process' => function ($nodeKey, $firstFileObj, $secondFileObj, $type) {
-                $node = new \stdClass();
-                $node->key = $nodeKey;
-                $node->type = $type;
-                $node->valueBefore = $firstFileObj->$nodeKey;
-                $node->valueAfter = $secondFileObj->$nodeKey;
-                return $node;
-            }
-        ]
-    ];
-
-    foreach ($nodeTypes as $nodeType) {
-        ['type' => $type, 'check' => $check, 'process' => $process] = $nodeType;
-        if ($check($nodeKey, $firstFileObj, $secondFileObj)) {
-            return ['type' => $type, 'process' => $process];
+        if ($first->$nodeKey !== $second->$nodeKey) {
+            $node = new \stdClass();
+            $node->key = $nodeKey;
+            $node->type = 'changed';
+            $node->valueBefore = $first->$nodeKey;
+            $node->valueAfter = $second->$nodeKey;
+            return $node;
         }
-    }
-
-    return [];
+        $node = new \stdClass();
+        $node->key = $nodeKey;
+        $node->type = 'unchanged';
+        $node->valueBefore = $first->$nodeKey;
+        return $node;
+    }, $allNodeNames);
 }
 
 function getFileData($pathToFile)

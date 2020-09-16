@@ -10,7 +10,8 @@
     ],
     "require": {
         "docopt/docopt": "^1.0",
-        "symfony/yaml": "^5.1"
+        "symfony/yaml": "^5.1",
+        "funct/funct": "^1.5"
     },
     "autoload": {
         "files": [
@@ -19,7 +20,8 @@
             "src/Formatters/PrettyPrinter.php",
             "src/Formatters/PlainPrinter.php",
             "src/Formatters/JsonPrinter.php",
-            "src/Formatters/Formatters.php"
+            "src/Formatters/Formatters.php",
+            "src/Helpers.php"
         ]
     },
     "require-dev": {
