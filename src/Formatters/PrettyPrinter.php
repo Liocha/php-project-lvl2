@@ -49,11 +49,8 @@ function printNode($items, $deep, $sign = '    ')
 {
     $ident = getIdent($deep);
     foreach ($items as $key => $val) {
-        if (is_object($val)) {
-            $resault[] = "{$ident}{$sign}{$key}: {\n" . printNode($val, $deep + 1) . "\n{$ident}    }";
-        } else {
-            $resault[] = "{$ident}{$sign}{$key}: " . fixBoolVal($val);
-        }
+        $resault[] = is_object($val) ? "{$ident}{$sign}{$key}: {\n" . printNode($val, $deep + 1) . "\n{$ident}    }" :
+            "{$ident}{$sign}{$key}: " . fixBoolVal($val);
     }
     return implode("\n", $resault);
 }
