@@ -24,36 +24,32 @@ function buildDiffTree($first, $second)
     $allNodeNames = union(array_keys(get_object_vars($first)), array_keys(get_object_vars($second)));
 
     return array_map(function ($nodeKey) use ($first, $second) {
+        $node = new \stdClass();
         if (!property_exists($second, $nodeKey)) {
-            $node = new \stdClass();
             $node->key = $nodeKey;
             $node->type = 'removed';
             $node->valueBefore = $first->$nodeKey;
             return $node;
         };
         if (!property_exists($first, $nodeKey)) {
-            $node = new \stdClass();
             $node->key = $nodeKey;
             $node->type = 'added';
             $node->valueAfter = $second->$nodeKey;
             return $node;
         };
         if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
-            $node = new \stdClass();
             $node->key = $nodeKey;
             $node->type = 'nested';
             $node->children = buildDiffTree($first->$nodeKey, $second->$nodeKey);
             return $node;
         }
         if ($first->$nodeKey !== $second->$nodeKey) {
-            $node = new \stdClass();
             $node->key = $nodeKey;
             $node->type = 'changed';
             $node->valueBefore = $first->$nodeKey;
             $node->valueAfter = $second->$nodeKey;
             return $node;
         }
-        $node = new \stdClass();
         $node->key = $nodeKey;
         $node->type = 'unchanged';
         $node->valueBefore = $first->$nodeKey;

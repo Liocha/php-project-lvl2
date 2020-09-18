@@ -10,9 +10,7 @@ function parse($file_data)
     switch ($type) {
         case 'json':
             return json_decode($data);
-        case 'yml':
-            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
-        case 'yuml':
+        case 'yml' || 'yuml':
             return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
         default:
             throw new \Exception("type '{$type}' not supported");
