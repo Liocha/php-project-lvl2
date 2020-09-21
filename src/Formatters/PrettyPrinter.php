@@ -2,8 +2,6 @@
 
 namespace Differ\Formatters\PrettyPrinter;
 
-use function Differ\Helpers\fixBoolVal;
-
 function prettyPrinter($diffTree)
 {
     $resault =  prettyRender($diffTree);
@@ -17,11 +15,11 @@ function prettyRender($diffTree, $deep = 0)
         switch ($type) {
             case ($type === 'removed'):
                 $sign = '  - ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
+                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $sign);
                 return "{$valueBefore}";
             case ($type === 'added'):
                 $sign = '  + ';
-                $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $sign);
+                $valueAfter = stringify($node->key, $node->valueAfter, $deep, $sign);
                 return  "{$valueAfter}";
             case ($type === 'nested'):
                 $sign = '    ';
@@ -31,12 +29,12 @@ function prettyRender($diffTree, $deep = 0)
             case ('changed'):
                 $signBefore = '  - ';
                 $signAfter = '  + ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $signBefore);
-                $valueAfter = printNode([$node->key => $node->valueAfter], $deep, $signAfter);
+                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $signBefore);
+                $valueAfter = stringify($node->key, $node->valueAfter, $deep, $signAfter);
                 return  "{$valueBefore}\n{$valueAfter}";
             default:
                 $sign = '    ';
-                $valueBefore = printNode([$node->key => $node->valueBefore], $deep, $sign);
+                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $sign);
                 return "{$valueBefore}";
         }
     }, $diffTree);
@@ -45,14 +43,22 @@ function prettyRender($diffTree, $deep = 0)
 }
 
 
-function printNode($items, $deep, $sign = '    ')
+function stringify($nodeName, $nodeValue, $deep, $sign = '    ')
 {
     $ident = getIdent($deep);
-    foreach ($items as $key => $val) {
-        $resault[] = is_object($val) ? "{$ident}{$sign}{$key}: {\n" . printNode($val, $deep + 1) . "\n{$ident}    }" :
-            "{$ident}{$sign}{$key}: " . fixBoolVal($val);
+
+    if (is_object($nodeValue)) {
+        $nodeNames = array_keys(get_object_vars($nodeValue));
+        $nodeValues = array_map(fn ($name) => stringify($name, $nodeValue->$name, $deep + 1), $nodeNames);
+        return "{$ident}{$sign}{$nodeName}: {\n" . implode("\n", $nodeValues) . "\n{$ident}    }";
     }
-    return implode("\n", $resault);
+
+    if (is_array($nodeValue)) {
+        $items = array_map(fn ($item) => fixBoolVal($item), $nodeValue);
+        return "{$ident}{$sign}{$nodeName}: [" . implode(", ", $items) . "]";
+    }
+
+    return "{$ident}{$sign}{$nodeName}: " . fixBoolVal($nodeValue);
 }
 
 function getIdent($deep)
@@ -64,4 +70,12 @@ function getIdent($deep)
         $deep -= 1;
     }
     return $resault;
+}
+
+function fixBoolVal($val)
+{
+    if (!is_bool($val)) {
+        return $val;
+    }
+    return $val ? 'true' : 'false';
 }

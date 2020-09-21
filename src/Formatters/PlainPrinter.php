@@ -2,8 +2,6 @@
 
 namespace Differ\Formatters\PlainPrinter;
 
-use function Differ\Helpers\fixBoolVal;
-
 function plainPrinter($diffTree)
 {
     $resault =  plainRender($diffTree);
@@ -15,30 +13,42 @@ function plainRender($diffTree, $parentChain = '')
 
     $resault = array_map(function ($node) use ($parentChain) {
         $type = $node->type;
+        $currentParentChain = getCurrentParentChain($parentChain, $node->key);
         switch ($type) {
             case ('removed'):
-                $parentChain = strlen($parentChain) === 0 ?  "'{$node->key}'" : "'{$parentChain}.{$node->key}'";
-                return  "Property {$parentChain} was removed";
+                return  "Property {$currentParentChain} was removed";
             case ('added'):
-                $value =  is_object($node->valueAfter) ? "[complex value]" :
-                    "'" . fixBoolVal($node->valueAfter) . "'";
-                $parentChain = strlen($parentChain) === 0 ?  "'{$node->key}'" : "'{$parentChain}.{$node->key}'";
-                return  "Property {$parentChain} was added with value: {$value}";
+                $value =  stringify($node->valueAfter);
+                return  "Property {$currentParentChain} was added with value: {$value}";
             case ('nested'):
-                $parent_chain = strlen($parentChain) === 0 ?  "{$node->key}" : "{$parentChain}.{$node->key}";
-                return plainRender($node->children, $parent_chain);
+                $currentParentChain = strlen($parentChain) === 0 ?  "{$node->key}" : "{$parentChain}.{$node->key}";
+                return plainRender($node->children, $currentParentChain);
             case ('changed'):
-                $parentChain = strlen($parentChain) === 0 ?  "'{$node['key']}'" :
-                    "'{$parentChain}.{$node->key}'";
-                $valueBefore = is_object($node->valueBefore) ? "[complex value]" :
-                    "'" . fixBoolVal($node->valueBefore) . "'";
-                $valueAfter = is_object($node->valueAfter) ?  "[complex value]" :
-                    "'" .  fixBoolVal($node->valueAfter) . "'";
-                return  "Property {$parentChain} was updated. From {$valueBefore} to {$valueAfter}";
+                $valueBefore = stringify($node->valueBefore);
+                $valueAfter = stringify($node->valueAfter);
+                return  "Property {$currentParentChain} was updated. From {$valueBefore} to {$valueAfter}";
         }
     }, $diffTree);
 
     $resault = array_diff($resault, array(''));
 
     return implode("\n", $resault);
+}
+
+function getCurrentParentChain($parentChain, $nodeKey)
+{
+    return strlen($parentChain) === 0 ?  "'{$nodeKey}'" : "'{$parentChain}.{$nodeKey}'";
+}
+
+function stringify($value)
+{
+    if (is_object($value)) {
+        return  "[complex value]";
+    }
+
+    if (is_bool($value)) {
+        $value = $value ? 'true' : 'false';
+    }
+
+    return "'{$value}'";
 }

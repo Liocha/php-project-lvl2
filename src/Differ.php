@@ -11,10 +11,10 @@ function genDiff($pathToFirstFile, $pathToSecondFile, $format)
     $firstFileData = getFileData($pathToFirstFile);
     $secondFileData = getFileData($pathToSecondFile);
 
-    $firstFileObj =  parse($firstFileData);
-    $secondFileObj = parse($secondFileData);
+    $dataBefore =  parse($firstFileData);
+    $dataAfter = parse($secondFileData);
 
-    $difTree =  buildDiffTree($firstFileObj, $secondFileObj);
+    $difTree =  buildDiffTree($dataBefore, $dataAfter);
 
     return renderByFormat($difTree, $format);
 }
@@ -59,11 +59,9 @@ function buildDiffTree($first, $second)
 
 function getFileData($pathToFile)
 {
-    $currentWorkingDirectory = posix_getcwd();
     ['extension' => $extension, 'dirname' => $dirName, 'basename' => $baseName] = pathinfo($pathToFile);
 
-    $filePath = $dirName[0] === '/' ? "{$dirName}/{$baseName}" :
-        "{$currentWorkingDirectory}/{$dirName}/{$baseName}";
+    $filePath = realpath("{$dirName}/{$baseName}");
 
     if (!file_exists($filePath)) {
         throw new \Exception("File '$filePath' does not exist");
