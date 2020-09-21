@@ -15,12 +15,10 @@ function prettyRender($diffTree, $deep = 0)
         switch ($type) {
             case ($type === 'removed'):
                 $sign = '  - ';
-                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $sign);
-                return "{$valueBefore}";
+                return stringify($node->key, $node->valueBefore, $deep, $sign);
             case ($type === 'added'):
                 $sign = '  + ';
-                $valueAfter = stringify($node->key, $node->valueAfter, $deep, $sign);
-                return  "{$valueAfter}";
+                return stringify($node->key, $node->valueAfter, $deep, $sign);
             case ($type === 'nested'):
                 $sign = '    ';
                 $child = prettyRender($node->children, $deep + 1);
@@ -34,8 +32,7 @@ function prettyRender($diffTree, $deep = 0)
                 return  "{$valueBefore}\n{$valueAfter}";
             default:
                 $sign = '    ';
-                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $sign);
-                return "{$valueBefore}";
+                return stringify($node->key, $node->valueBefore, $deep, $sign);
         }
     }, $diffTree);
 
