@@ -11,7 +11,7 @@
 [![asciicast](https://asciinema.org/a/neaONfY92UrXLGD1oMwmAK5IX.svg)](https://asciinema.org/a/neaONfY92UrXLGD1oMwmAK5IX)
 
 ### Пример работы пакета. Поиск различий между двумя (имеющих вложенные структуры) json файлами.
-[![asciicast](https://asciinema.org/a/XX5kmsmwk8xnZvNfhMkvec12w.svg)](https://asciinema.org/a/XX5kmsmwk8xnZvNfhMkvec12w)
+[![asciicast](https://asciinema.org/a/uHGZx7irrt0vLgFQRzT8vdSPE.svg)](https://asciinema.org/a/uHGZx7irrt0vLgFQRzT8vdSPE)
 
 ### Пример работы пакета. Поиск различий между двумя (имеющих вложенные структуры) json файлами, плоский формат.
 [![asciicast](https://asciinema.org/a/6hnhperr3bYjXhISaikNANcVL.svg)](https://asciinema.org/a/6hnhperr3bYjXhISaikNANcVL)
