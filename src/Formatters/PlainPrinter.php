@@ -7,7 +7,7 @@ use function Funct\Collection\without;
 function plainPrinter($diffTree)
 {
     $resault =  renderPlain($diffTree);
-    return "{$resault}";
+    return (string) $resault;
 }
 
 function renderPlain($diffTree, $parentChain = '')

@@ -32,4 +32,4 @@ $args = \Docopt::handle($doc, array('version' => "0.0.1"));
 
 $resault = genDiff($pathToFirstFile, $pathToSecondFile, $format);
 
-echo $resault;
+echo $resault . PHP_EOL;
