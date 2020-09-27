@@ -11,8 +11,8 @@ function genDiff($pathToFirstFile, $pathToSecondFile, $format)
     $firstFileData = getFileData($pathToFirstFile);
     $secondFileData = getFileData($pathToSecondFile);
 
-    $dataBefore =  parse($firstFileData);
-    $dataAfter = parse($secondFileData);
+    $dataBefore =  parse($firstFileData[0], $firstFileData[1]);
+    $dataAfter = parse($secondFileData[0], $secondFileData[1]);
 
     $difTree =  buildDiffTree($dataBefore, $dataAfter);
 
@@ -28,13 +28,21 @@ function buildDiffTree($first, $second)
         if (!property_exists($second, $nodeKey)) {
             $node->key = $nodeKey;
             $node->type = 'removed';
-            $node->valueBefore = $first->$nodeKey;
+            if (is_object($first->$nodeKey)) {
+                $node->valueBefore = clone $first->$nodeKey;
+            } else {
+                $node->valueBefore = $first->$nodeKey;
+            }
             return $node;
         };
         if (!property_exists($first, $nodeKey)) {
             $node->key = $nodeKey;
             $node->type = 'added';
-            $node->valueAfter = $second->$nodeKey;
+            if (is_object($second->$nodeKey)) {
+                $node->valueAfter = clone $second->$nodeKey;
+            } else {
+                $node->valueAfter = $second->$nodeKey;
+            }
             return $node;
         };
         if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
@@ -46,13 +54,25 @@ function buildDiffTree($first, $second)
         if ($first->$nodeKey !== $second->$nodeKey) {
             $node->key = $nodeKey;
             $node->type = 'changed';
-            $node->valueBefore = $first->$nodeKey;
-            $node->valueAfter = $second->$nodeKey;
+            if (is_object($first->$nodeKey)) {
+                $node->valueBefore = clone $first->$nodeKey;
+            } else {
+                $node->valueBefore = $first->$nodeKey;
+            }
+            if (is_object($second->$nodeKey)) {
+                $node->valueAfter = clone $second->$nodeKey;
+            } else {
+                $node->valueAfter = $second->$nodeKey;
+            }
             return $node;
         }
         $node->key = $nodeKey;
         $node->type = 'unchanged';
-        $node->valueBefore = $first->$nodeKey;
+        if (is_object($first->$nodeKey)) {
+            $node->valueBefore = clone $first->$nodeKey;
+        } else {
+            $node->valueBefore = $first->$nodeKey;
+        }
         return $node;
     }, $allNodeNames);
 }

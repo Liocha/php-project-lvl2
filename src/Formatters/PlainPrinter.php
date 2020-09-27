@@ -2,13 +2,15 @@
 
 namespace Differ\Formatters\PlainPrinter;
 
+use function Funct\Collection\without;
+
 function plainPrinter($diffTree)
 {
-    $resault =  plainRender($diffTree);
-    return "{$resault}\n";
+    $resault =  renderPlain($diffTree);
+    return "{$resault}";
 }
 
-function plainRender($diffTree, $parentChain = '')
+function renderPlain($diffTree, $parentChain = '')
 {
 
     $resault = array_map(function ($node) use ($parentChain) {
@@ -22,15 +24,17 @@ function plainRender($diffTree, $parentChain = '')
                 return  "Property {$currentParentChain} was added with value: {$value}";
             case ('nested'):
                 $currentParentChain = strlen($parentChain) === 0 ?  "{$node->key}" : "{$parentChain}.{$node->key}";
-                return plainRender($node->children, $currentParentChain);
+                return renderPlain($node->children, $currentParentChain);
             case ('changed'):
                 $valueBefore = stringify($node->valueBefore);
                 $valueAfter = stringify($node->valueAfter);
                 return  "Property {$currentParentChain} was updated. From {$valueBefore} to {$valueAfter}";
+            default:
+                return "";
         }
     }, $diffTree);
 
-    $resault = array_diff($resault, array(''));
+    $resault = without($resault, '');
 
     return implode("\n", $resault);
 }
@@ -50,5 +54,5 @@ function stringify($value)
         $value = $value ? 'true' : 'false';
     }
 
-    return "'{$value}'";
+    return "'" . (string) $value . "'";
 }

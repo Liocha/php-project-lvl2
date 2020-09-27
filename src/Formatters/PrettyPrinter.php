@@ -4,35 +4,35 @@ namespace Differ\Formatters\PrettyPrinter;
 
 function prettyPrinter($diffTree)
 {
-    $resault =  prettyRender($diffTree);
-    return "{\n{$resault}\n}\n";
+    $resault =  renderPretty($diffTree);
+    return "{\n{$resault}\n}";
 }
 
-function prettyRender($diffTree, $deep = 0)
+function renderPretty($diffTree, $depth = 0)
 {
-    $resault = array_map(function ($node) use ($deep) {
+    $resault = array_map(function ($node) use ($depth) {
         $type = $node->type;
         switch ($type) {
             case ($type === 'removed'):
                 $sign = '  - ';
-                return stringify($node->key, $node->valueBefore, $deep, $sign);
+                return stringify($node->key, $node->valueBefore, $depth, $sign);
             case ($type === 'added'):
                 $sign = '  + ';
-                return stringify($node->key, $node->valueAfter, $deep, $sign);
+                return stringify($node->key, $node->valueAfter, $depth, $sign);
             case ($type === 'nested'):
                 $sign = '    ';
-                $child = prettyRender($node->children, $deep + 1);
-                $ident = getIdent($deep);
+                $child = renderPretty($node->children, $depth + 1);
+                $ident = getIdent($depth);
                 return "{$ident}{$sign}{$node->key}: {\n{$child}\n{$ident}    }";
             case ('changed'):
                 $signBefore = '  - ';
                 $signAfter = '  + ';
-                $valueBefore = stringify($node->key, $node->valueBefore, $deep, $signBefore);
-                $valueAfter = stringify($node->key, $node->valueAfter, $deep, $signAfter);
+                $valueBefore = stringify($node->key, $node->valueBefore, $depth, $signBefore);
+                $valueAfter = stringify($node->key, $node->valueAfter, $depth, $signAfter);
                 return  "{$valueBefore}\n{$valueAfter}";
             default:
                 $sign = '    ';
-                return stringify($node->key, $node->valueBefore, $deep, $sign);
+                return stringify($node->key, $node->valueBefore, $depth, $sign);
         }
     }, $diffTree);
 
@@ -40,13 +40,13 @@ function prettyRender($diffTree, $deep = 0)
 }
 
 
-function stringify($nodeName, $nodeValue, $deep, $sign = '    ')
+function stringify($nodeName, $nodeValue, $depth, $sign = '    ')
 {
-    $ident = getIdent($deep);
+    $ident = getIdent($depth);
 
     if (is_object($nodeValue)) {
         $nodeNames = array_keys(get_object_vars($nodeValue));
-        $nodeValues = array_map(fn ($name) => stringify($name, $nodeValue->$name, $deep + 1), $nodeNames);
+        $nodeValues = array_map(fn ($name) => stringify($name, $nodeValue->$name, $depth + 1), $nodeNames);
         return "{$ident}{$sign}{$nodeName}: {\n" . implode("\n", $nodeValues) . "\n{$ident}    }";
     }
 
@@ -58,13 +58,14 @@ function stringify($nodeName, $nodeValue, $deep, $sign = '    ')
     return "{$ident}{$sign}{$nodeName}: " . fixBoolVal($nodeValue);
 }
 
-function getIdent($deep)
+function getIdent($depth)
 {
+    $tmp = $depth;
     $base = '    ';
     $resault = '';
-    while ($deep  > 0) {
+    while ($tmp  > 0) {
         $resault = $resault . $base;
-        $deep -= 1;
+        $tmp -= 1;
     }
     return $resault;
 }
