@@ -28,21 +28,13 @@ function buildDiffTree($first, $second)
         if (!property_exists($second, $nodeKey)) {
             $node->key = $nodeKey;
             $node->type = 'removed';
-            if (is_object($first->$nodeKey)) {
-                $node->valueBefore = clone $first->$nodeKey;
-            } else {
-                $node->valueBefore = $first->$nodeKey;
-            }
+            $node->valueBefore = $first->$nodeKey;
             return $node;
         };
         if (!property_exists($first, $nodeKey)) {
             $node->key = $nodeKey;
             $node->type = 'added';
-            if (is_object($second->$nodeKey)) {
-                $node->valueAfter = clone $second->$nodeKey;
-            } else {
-                $node->valueAfter = $second->$nodeKey;
-            }
+            $node->valueAfter = $second->$nodeKey;
             return $node;
         };
         if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
@@ -54,25 +46,13 @@ function buildDiffTree($first, $second)
         if ($first->$nodeKey !== $second->$nodeKey) {
             $node->key = $nodeKey;
             $node->type = 'changed';
-            if (is_object($first->$nodeKey)) {
-                $node->valueBefore = clone $first->$nodeKey;
-            } else {
-                $node->valueBefore = $first->$nodeKey;
-            }
-            if (is_object($second->$nodeKey)) {
-                $node->valueAfter = clone $second->$nodeKey;
-            } else {
-                $node->valueAfter = $second->$nodeKey;
-            }
+            $node->valueBefore = $first->$nodeKey;
+            $node->valueAfter = $second->$nodeKey;
             return $node;
         }
         $node->key = $nodeKey;
         $node->type = 'unchanged';
-        if (is_object($first->$nodeKey)) {
-            $node->valueBefore = clone $first->$nodeKey;
-        } else {
-            $node->valueBefore = $first->$nodeKey;
-        }
+        $node->valueBefore = $first->$nodeKey;
         return $node;
     }, $allNodeNames);
 }
