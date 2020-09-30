@@ -14,20 +14,20 @@ function renderPlain($diffTree, $parentChain = '')
 {
 
     $resault = array_map(function ($node) use ($parentChain) {
-        $type = $node->type;
-        $currentParentChain = getCurrentParentChain($parentChain, $node->key);
+        $type = $node['type'];
+        $currentParentChain = getCurrentParentChain($parentChain, $node['key']);
         switch ($type) {
             case ('removed'):
                 return  "Property {$currentParentChain} was removed";
             case ('added'):
-                $value =  stringify($node->valueAfter);
+                $value =  stringify($node['valueAfter']);
                 return  "Property {$currentParentChain} was added with value: {$value}";
             case ('nested'):
-                $currentParentChain = strlen($parentChain) === 0 ?  "{$node->key}" : "{$parentChain}.{$node->key}";
-                return renderPlain($node->children, $currentParentChain);
+                $currentParentChain = strlen($parentChain) === 0 ?  "{$node['key']}" : "{$parentChain}.{$node['key']}";
+                return renderPlain($node['children'], $currentParentChain);
             case ('changed'):
-                $valueBefore = stringify($node->valueBefore);
-                $valueAfter = stringify($node->valueAfter);
+                $valueBefore = stringify($node['valueBefore']);
+                $valueAfter = stringify($node['valueAfter']);
                 return  "Property {$currentParentChain} was updated. From {$valueBefore} to {$valueAfter}";
             default:
                 return "";
@@ -46,7 +46,7 @@ function getCurrentParentChain($parentChain, $nodeKey)
 
 function stringify($value)
 {
-    if (is_object($value)) {
+    if (is_array($value)) {
         return  "[complex value]";
     }
 

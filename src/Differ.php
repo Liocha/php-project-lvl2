@@ -24,37 +24,46 @@ function buildDiffTree($first, $second)
     $allNodeNames = union(array_keys(get_object_vars($first)), array_keys(get_object_vars($second)));
 
     return array_map(function ($nodeKey) use ($first, $second) {
-        $node = new \stdClass();
+        $node = [];
+        $node['key'] = $nodeKey;
         if (!property_exists($second, $nodeKey)) {
-            $node->key = $nodeKey;
-            $node->type = 'removed';
-            $node->valueBefore = $first->$nodeKey;
+            $node['type'] = 'removed';
+            $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
             return $node;
         };
         if (!property_exists($first, $nodeKey)) {
-            $node->key = $nodeKey;
-            $node->type = 'added';
-            $node->valueAfter = $second->$nodeKey;
+            $node['type'] = 'added';
+            $node['valueAfter'] = mappingObjToAssoc($second->$nodeKey);
             return $node;
         };
         if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
-            $node->key = $nodeKey;
-            $node->type = 'nested';
-            $node->children = buildDiffTree($first->$nodeKey, $second->$nodeKey);
+            $node['type'] = 'nested';
+            $node['children'] = buildDiffTree($first->$nodeKey, $second->$nodeKey);
             return $node;
         }
         if ($first->$nodeKey !== $second->$nodeKey) {
-            $node->key = $nodeKey;
-            $node->type = 'changed';
-            $node->valueBefore = $first->$nodeKey;
-            $node->valueAfter = $second->$nodeKey;
+            $node['type'] = 'changed';
+            $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
+            $node['valueAfter'] = mappingObjToAssoc($second->$nodeKey);
             return $node;
         }
-        $node->key = $nodeKey;
-        $node->type = 'unchanged';
-        $node->valueBefore = $first->$nodeKey;
+        $node['type'] = 'unchanged';
+        $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
         return $node;
     }, $allNodeNames);
+}
+
+function mappingObjToAssoc($data)
+{
+    if (!is_object($data)) {
+        return $data;
+    }
+
+    $nodeNames = array_keys(get_object_vars($data));
+    return ['children' => array_map(
+        fn ($item) => ['key' =>  $item, 'value' => mappingObjToAssoc($data->$item)],
+        $nodeNames
+    )];
 }
 
 function getFileData($pathToFile)
