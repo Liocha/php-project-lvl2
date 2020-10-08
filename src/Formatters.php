@@ -1,12 +1,12 @@
 <?php
 
-namespace Differ\Formatters\Formatters;
+namespace Differ\Formatters;
 
 use function Differ\Formatters\PrettyPrinter\prettyPrinter;
 use function Differ\Formatters\PlainPrinter\plainPrinter;
 use function Differ\Formatters\JsonPrinter\jsonPrinter;
 
-function renderByFormat($diffTree, $format)
+function render($diffTree, $format)
 {
     switch (mb_strtolower($format)) {
         case 'pretty':

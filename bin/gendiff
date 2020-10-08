@@ -30,6 +30,6 @@ $args = \Docopt::handle($doc, array('version' => "0.0.1"));
 
 ['<firstFile>' => $pathToFirstFile, '<secondFile>' => $pathToSecondFile, '--format' => $format] = $args;
 
-$resault = genDiff($pathToFirstFile, $pathToSecondFile, $format);
+$result = genDiff($pathToFirstFile, $pathToSecondFile, $format);
 
-echo $resault . PHP_EOL;
+echo $result . PHP_EOL;

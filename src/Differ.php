@@ -2,21 +2,21 @@
 
 namespace Differ\Differ;
 
-use function Differ\Formatters\Formatters\renderByFormat;
+use function Differ\Formatters\render;
 use function Differ\Parsers\parse;
 use function Funct\Collection\union;
 
 function genDiff($pathToFirstFile, $pathToSecondFile, $format)
 {
-    $firstFileData = getFileData($pathToFirstFile);
-    $secondFileData = getFileData($pathToSecondFile);
+    [$firstFileData, $firstFileFormat] = getFileData($pathToFirstFile);
+    [$secondFileData, $secondFileFormat] = getFileData($pathToSecondFile);
 
-    $dataBefore =  parse($firstFileData[0], $firstFileData[1]);
-    $dataAfter = parse($secondFileData[0], $secondFileData[1]);
+    $dataBefore =  parse($firstFileData, $firstFileFormat);
+    $dataAfter = parse($secondFileData, $secondFileFormat);
 
     $difTree =  buildDiffTree($dataBefore, $dataAfter);
 
-    return renderByFormat($difTree, $format);
+    return render($difTree, $format);
 }
 
 function buildDiffTree($first, $second)
@@ -27,29 +27,27 @@ function buildDiffTree($first, $second)
         $node = [];
         $node['key'] = $nodeKey;
         if (!property_exists($second, $nodeKey)) {
-            $node['type'] = 'removed';
-            $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
-            return $node;
+            return ['key' => $nodeKey, 'type' => 'removed', 'valueBefore' => mappingObjToAssoc($first->$nodeKey)];
         };
         if (!property_exists($first, $nodeKey)) {
-            $node['type'] = 'added';
-            $node['valueAfter'] = mappingObjToAssoc($second->$nodeKey);
-            return $node;
+            return ['key' => $nodeKey, 'type' => 'added', 'valueAfter' => mappingObjToAssoc($second->$nodeKey)];
         };
         if (is_object($first->$nodeKey) && is_object($second->$nodeKey)) {
-            $node['type'] = 'nested';
-            $node['children'] = buildDiffTree($first->$nodeKey, $second->$nodeKey);
-            return $node;
+            return [
+                'key' => $nodeKey,
+                'type' => 'nested',
+                'children' =>  buildDiffTree($first->$nodeKey, $second->$nodeKey)
+            ];
         }
         if ($first->$nodeKey !== $second->$nodeKey) {
-            $node['type'] = 'changed';
-            $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
-            $node['valueAfter'] = mappingObjToAssoc($second->$nodeKey);
-            return $node;
+            return [
+                'key' => $nodeKey,
+                'type' => 'changed',
+                'valueBefore' => mappingObjToAssoc($first->$nodeKey),
+                'valueAfter' => mappingObjToAssoc($second->$nodeKey)
+            ];
         }
-        $node['type'] = 'unchanged';
-        $node['valueBefore'] = mappingObjToAssoc($first->$nodeKey);
-        return $node;
+        return ['key' => $nodeKey, 'type' => 'unchanged', 'valueBefore' => mappingObjToAssoc($first->$nodeKey)];
     }, $allNodeNames);
 }
 
@@ -68,15 +66,13 @@ function mappingObjToAssoc($data)
 
 function getFileData($pathToFile)
 {
-    ['extension' => $extension, 'dirname' => $dirName, 'basename' => $baseName] = pathinfo($pathToFile);
+    ['extension' => $extension] = pathinfo($pathToFile);
 
-    $filePath = realpath("{$dirName}/{$baseName}");
-
-    if (!file_exists($filePath)) {
-        throw new \Exception("File '$filePath' does not exist");
+    if (!file_exists($pathToFile)) {
+        throw new \Exception("File '$pathToFile' does not exist");
     }
 
-    $data = file_get_contents($filePath);
+    $data = file_get_contents($pathToFile);
 
     return [$data, $extension];
 }

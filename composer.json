@@ -20,7 +20,7 @@
             "src/Formatters/PrettyPrinter.php",
             "src/Formatters/PlainPrinter.php",
             "src/Formatters/JsonPrinter.php",
-            "src/Formatters/Formatters.php"
+            "src/Formatters.php"
         ]
     },
     "require-dev": {
