@@ -21,7 +21,6 @@ class GenDiffTest extends TestCase
     public function testGenDiff($first, $second, $format, $expected)
     {
         $pathToExpectedFixture = $this->getPath($expected);
-        $resault =  file_get_contents($pathToExpectedFixture);
         $this->assertStringEqualsFile(
             $pathToExpectedFixture,
             genDiff($this->getPath($first), $this->getPath($second), $format)
