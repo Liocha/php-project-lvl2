@@ -69,7 +69,7 @@ function stringify($nodeName, $nodeValue, $depth, $sign = '    ')
 }
 
 function getIdent($depth)
-{   
+{
     return str_repeat('    ', $depth);
 }
 
