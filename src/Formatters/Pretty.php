@@ -69,14 +69,8 @@ function stringify($nodeName, $nodeValue, $depth, $sign = '    ')
 }
 
 function getIdent($depth)
-{
-    $base = '    ';
-    $result = '';
-    while ($depth  > 0) {
-        $result = $result . $base;
-        $depth -= 1;
-    }
-    return $result;
+{   
+ return str_repeat('    ', $depth);
 }
 
 function fixBoolVal($val)
