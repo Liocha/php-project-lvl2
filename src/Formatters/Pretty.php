@@ -1,16 +1,16 @@
 <?php
 
-namespace Differ\Formatters\PrettyPrinter;
+namespace Differ\Formatters\Pretty;
 
-function prettyPrinter($diffTree)
+function render($diffTree)
 {
-    $resault =  renderPretty($diffTree);
-    return "{\n{$resault}\n}";
+    $result =  renderPretty($diffTree);
+    return "{\n{$result}\n}";
 }
 
 function renderPretty($diffTree, $depth = 0)
 {
-    $resault = array_map(function ($node) use ($depth) {
+    $result = array_map(function ($node) use ($depth) {
         $type = $node['type'];
         switch ($type) {
             case ($type === 'removed'):
@@ -36,7 +36,7 @@ function renderPretty($diffTree, $depth = 0)
         }
     }, $diffTree);
 
-    return implode("\n", $resault);
+    return implode("\n", $result);
 }
 
 
@@ -58,18 +58,25 @@ function stringify($nodeName, $nodeValue, $depth, $sign = '    ')
         return "{$ident}{$sign}{$nodeName}: [" . implode(", ", $items) . "]";
     }
 
+    if (is_object($nodeValue)) {
+        $nodeNames = array_keys(get_object_vars($nodeValue));
+        $nodeValues = array_map(fn ($name) => stringify($name, $nodeValue->$name, $depth + 1), $nodeNames);
+        return "{$ident}{$sign}{$nodeName}: {\n" . implode("\n", $nodeValues) . "\n{$ident}    }";
+    }
+
+
     return "{$ident}{$sign}{$nodeName}: " . fixBoolVal($nodeValue);
 }
 
 function getIdent($depth)
 {
     $base = '    ';
-    $resault = '';
+    $result = '';
     while ($depth  > 0) {
-        $resault = $resault . $base;
+        $result = $result . $base;
         $depth -= 1;
     }
-    return $resault;
+    return $result;
 }
 
 function fixBoolVal($val)

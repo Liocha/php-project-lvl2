@@ -10,7 +10,6 @@ function parse($data, $format)
         case 'json':
             return json_decode($data);
         case 'yml':
-            return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
         case 'yaml':
             return Yaml::parse($data, Yaml::PARSE_OBJECT_FOR_MAP);
         default:

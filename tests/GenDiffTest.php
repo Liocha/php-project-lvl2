@@ -6,24 +6,24 @@ use PHPUnit\Framework\TestCase;
 
 use function Differ\Differ\genDiff;
 
+function getFixturePath($name)
+{
+    return implode("/", [__DIR__, "fixtures", $name ]);
+}
+
+
 class GenDiffTest extends TestCase
 {
-
-    public function getPath($name)
-    {
-        return __DIR__ . "/fixtures/" . $name;
-    }
-
     /**
      * @dataProvider additionProvider
      */
 
     public function testGenDiff($first, $second, $format, $expected)
     {
-        $pathToExpectedFixture = $this->getPath($expected);
+        $pathToExpectedFixture = getFixturePath($expected);
         $this->assertStringEqualsFile(
             $pathToExpectedFixture,
-            genDiff($this->getPath($first), $this->getPath($second), $format)
+            genDiff(getFixturePath($first), getFixturePath($second), $format)
         );
     }
 

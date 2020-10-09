@@ -17,9 +17,9 @@
         "files": [
             "src/Differ.php",
             "src/Parsers.php",
-            "src/Formatters/PrettyPrinter.php",
-            "src/Formatters/PlainPrinter.php",
-            "src/Formatters/JsonPrinter.php",
+            "src/Formatters/Pretty.php",
+            "src/Formatters/Plain.php",
+            "src/Formatters/Json.php",
             "src/Formatters.php"
         ]
     },
