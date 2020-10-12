@@ -1,8 +1,8 @@
 Property 'common.setting2' was removed
-Property 'common.setting3' was updated. From 'true' to [complex value]
+Property 'common.setting3' was updated. From true to [complex value]
 Property 'common.setting6.doge.wow' was updated. From 'too much' to 'so much'
 Property 'common.setting6.ops' was added with value: 'vops'
-Property 'common.follow' was added with value: 'false'
+Property 'common.follow' was added with value: false
 Property 'common.setting4' was added with value: 'blah blah'
 Property 'common.setting5' was added with value: [complex value]
 Property 'group1.baz' was updated. From 'bas' to 'bars'
