@@ -4,35 +4,43 @@ namespace Differ\Formatters\Pretty;
 
 function render($diffTree)
 {
-    $result =  renderPretty($diffTree);
+    $result = renderPretty($diffTree);
     return "{\n{$result}\n}";
 }
+
 
 function renderPretty($diffTree, $depth = 0)
 {
     $result = array_map(function ($node) use ($depth) {
         $type = $node['type'];
+        $ident = getIdent($depth);
+        $nodeName = $node['key'];
         switch ($type) {
             case ($type === 'removed'):
                 $sign = '  - ';
-                return stringify($node['key'], $node['valueBefore'], $depth, $sign);
+                $value  = stringify($node['valueBefore'], $depth + 1);
+                return "{$ident}{$sign}{$nodeName}: {$value}";
             case ($type === 'added'):
                 $sign = '  + ';
-                return stringify($node['key'], $node['valueAfter'], $depth, $sign);
+                $value  = stringify($node['valueAfter'], $depth + 1);
+                return "{$ident}{$sign}{$nodeName}: {$value}";
             case ($type === 'nested'):
                 $sign = '    ';
                 $child = renderPretty($node['children'], $depth + 1);
-                $ident = getIdent($depth);
-                return "{$ident}{$sign}{$node['key']}: {\n{$child}\n{$ident}    }";
+                return "{$ident}{$sign}{$nodeName}: {\n{$child}\n{$ident}    }";
             case ('changed'):
                 $signBefore = '  - ';
                 $signAfter = '  + ';
-                $valueBefore = stringify($node['key'], $node['valueBefore'], $depth, $signBefore);
-                $valueAfter = stringify($node['key'], $node['valueAfter'], $depth, $signAfter);
-                return  "{$valueBefore}\n{$valueAfter}";
-            default:
+                $valueBefore = stringify($node['valueBefore'], $depth + 1);
+                $valueAfter = stringify($node['valueAfter'], $depth + 1);
+                return "{$ident}{$signBefore}{$nodeName}: {$valueBefore}\n" .
+                    "{$ident}{$signAfter}{$nodeName}: {$valueAfter}";
+            case ('unchanged'):
                 $sign = '    ';
-                return stringify($node['key'], $node['valueBefore'], $depth, $sign);
+                $value = stringify($node['valueBefore'], $depth + 1);
+                return "{$ident}{$sign}{$nodeName}: {$value}";
+            default:
+                throw new \Exception("Unknown type node, current value is {$type}");
         }
     }, $diffTree);
 
@@ -40,43 +48,33 @@ function renderPretty($diffTree, $depth = 0)
 }
 
 
-function stringify($nodeName, $nodeValue, $depth, $sign = '    ')
+function stringify($nodeValue, $depth)
 {
     $ident = getIdent($depth);
 
-    if (is_array($nodeValue) && array_key_exists('children', $nodeValue)) {
-        $nodeChildren = array_map(function ($node) use ($depth) {
-            ['key' => $name, 'value' => $valie] = $node;
-            return  stringify($name, $valie, $depth + 1);
-        }, $nodeValue['children']);
-
-        return "{$ident}{$sign}{$nodeName}: {\n" . implode("\n", $nodeChildren) . "\n{$ident}    }";
+    if (is_object($nodeValue)) {
+        $nodeNames = array_keys(get_object_vars($nodeValue));
+        $nodeValues = array_map(
+            fn ($name) => "    {$ident}{$name}: " . stringify($nodeValue->$name, $depth + 1),
+            $nodeNames
+        );
+        return "{\n" . implode("\n", $nodeValues) . "\n{$ident}}";
     }
 
     if (is_array($nodeValue)) {
-        $items = array_map(fn ($item) => fixBoolVal($item), $nodeValue);
-        return "{$ident}{$sign}{$nodeName}: [" . implode(", ", $items) . "]";
+        $items = array_map(fn ($item) => stringify($item, $depth), $nodeValue);
+        $result = implode(", ", $items);
+        return "[{$result}]";
     }
 
-    if (is_object($nodeValue)) {
-        $nodeNames = array_keys(get_object_vars($nodeValue));
-        $nodeValues = array_map(fn ($name) => stringify($name, $nodeValue->$name, $depth + 1), $nodeNames);
-        return "{$ident}{$sign}{$nodeName}: {\n" . implode("\n", $nodeValues) . "\n{$ident}    }";
+    if (is_bool($nodeValue)) {
+        return $nodeValue ? 'true' : 'false';
     }
 
-
-    return "{$ident}{$sign}{$nodeName}: " . fixBoolVal($nodeValue);
+    return "{$nodeValue}";
 }
 
 function getIdent($depth)
 {
     return str_repeat('    ', $depth);
-}
-
-function fixBoolVal($val)
-{
-    if (!is_bool($val)) {
-        return $val;
-    }
-    return $val ? 'true' : 'false';
 }
