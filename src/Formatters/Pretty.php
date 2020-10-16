@@ -2,6 +2,8 @@
 
 namespace Differ\Formatters\Pretty;
 
+const BASE_IDENT = "  ";
+
 function render($diffTree)
 {
     $result = renderPretty($diffTree);
@@ -9,34 +11,34 @@ function render($diffTree)
 }
 
 
-function renderPretty($diffTree, $depth = 0)
+function renderPretty($diffTree, $depth = 1)
 {
     $result = array_map(function ($node) use ($depth) {
         $type = $node['type'];
-        $ident = getIdent($depth);
+        $ident = getIdent($depth, true);
         $nodeName = $node['key'];
         switch ($type) {
             case ($type === 'removed'):
-                $sign = '  - ';
+                $sign = '- ';
                 $value  = stringify($node['valueBefore'], $depth + 1);
                 return "{$ident}{$sign}{$nodeName}: {$value}";
             case ($type === 'added'):
-                $sign = '  + ';
+                $sign = '+ ';
                 $value  = stringify($node['valueAfter'], $depth + 1);
                 return "{$ident}{$sign}{$nodeName}: {$value}";
             case ($type === 'nested'):
-                $sign = '    ';
+                $sign = '  ';
                 $child = renderPretty($node['children'], $depth + 1);
-                return "{$ident}{$sign}{$nodeName}: {\n{$child}\n{$ident}    }";
+                return "{$ident}{$sign}{$nodeName}: {\n{$child}\n{$ident}  }";
             case ('changed'):
-                $signBefore = '  - ';
-                $signAfter = '  + ';
+                $signBefore = '- ';
+                $signAfter = '+ ';
                 $valueBefore = stringify($node['valueBefore'], $depth + 1);
                 $valueAfter = stringify($node['valueAfter'], $depth + 1);
                 return "{$ident}{$signBefore}{$nodeName}: {$valueBefore}\n" .
                     "{$ident}{$signAfter}{$nodeName}: {$valueAfter}";
             case ('unchanged'):
-                $sign = '    ';
+                $sign = '  ';
                 $value = stringify($node['valueBefore'], $depth + 1);
                 return "{$ident}{$sign}{$nodeName}: {$value}";
             default:
@@ -55,11 +57,12 @@ function stringify($nodeValue, $depth)
     if (is_object($nodeValue)) {
         $nodeNames = array_keys(get_object_vars($nodeValue));
         $nodeValues = array_map(
-            fn ($name) => "    {$ident}{$name}: " . stringify($nodeValue->$name, $depth + 1),
+            fn ($name) => "{$ident}{$name}: " . stringify($nodeValue->$name, $depth + 1),
             $nodeNames
         );
         $value = implode("\n", $nodeValues);
-        return "{\n{$value}\n{$ident}}";
+        $tmp = getIdent($depth - 1);
+        return "{\n{$value}\n{$tmp}}";
     }
 
     if (is_array($nodeValue)) {
@@ -75,7 +78,13 @@ function stringify($nodeValue, $depth)
     return "{$nodeValue}";
 }
 
-function getIdent($depth)
+function getIdent($depth, $hasSign = false)
 {
-    return str_repeat('    ', $depth);
+    if ($hasSign) {
+        $indentSize = $depth * 2 - 1;
+    } else {
+        $indentSize = $depth * 2;
+    }
+
+    return  str_repeat(BASE_IDENT, $indentSize);
 }
