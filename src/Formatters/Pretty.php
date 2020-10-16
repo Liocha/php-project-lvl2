@@ -69,7 +69,7 @@ function stringify($nodeValue, $depth)
         return $nodeValue ? 'true' : 'false';
     }
 
-    return "{$nodeValue}";
+    return  (string) $nodeValue;
 }
 
 function getIdent($depth, $hasSign = false)
