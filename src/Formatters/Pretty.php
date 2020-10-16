@@ -18,13 +18,13 @@ function renderPretty($diffTree, $depth = 1)
         $ident = getIdent($depth, true);
         $nodeName = $node['key'];
         switch ($type) {
-            case ($type === 'removed'):
+            case ('removed'):
                 $value  = stringify($node['valueBefore'], $depth + 1);
                 return "{$ident}- {$nodeName}: {$value}";
-            case ($type === 'added'):
+            case ('added'):
                 $value  = stringify($node['valueAfter'], $depth + 1);
                 return "{$ident}+ {$nodeName}: {$value}";
-            case ($type === 'nested'):
+            case ('nested'):
                 $child = renderPretty($node['children'], $depth + 1);
                 return "{$ident}  {$nodeName}: {\n{$child}\n{$ident}  }";
             case ('changed'):
