@@ -19,28 +19,22 @@ function renderPretty($diffTree, $depth = 1)
         $nodeName = $node['key'];
         switch ($type) {
             case ($type === 'removed'):
-                $sign = '- ';
                 $value  = stringify($node['valueBefore'], $depth + 1);
-                return "{$ident}{$sign}{$nodeName}: {$value}";
+                return "{$ident}- {$nodeName}: {$value}";
             case ($type === 'added'):
-                $sign = '+ ';
                 $value  = stringify($node['valueAfter'], $depth + 1);
-                return "{$ident}{$sign}{$nodeName}: {$value}";
+                return "{$ident}+ {$nodeName}: {$value}";
             case ($type === 'nested'):
-                $sign = '  ';
                 $child = renderPretty($node['children'], $depth + 1);
-                return "{$ident}{$sign}{$nodeName}: {\n{$child}\n{$ident}  }";
+                return "{$ident}  {$nodeName}: {\n{$child}\n{$ident}  }";
             case ('changed'):
-                $signBefore = '- ';
-                $signAfter = '+ ';
                 $valueBefore = stringify($node['valueBefore'], $depth + 1);
                 $valueAfter = stringify($node['valueAfter'], $depth + 1);
-                return "{$ident}{$signBefore}{$nodeName}: {$valueBefore}\n" .
-                    "{$ident}{$signAfter}{$nodeName}: {$valueAfter}";
+                return "{$ident}- {$nodeName}: {$valueBefore}\n" .
+                    "{$ident}+ {$nodeName}: {$valueAfter}";
             case ('unchanged'):
-                $sign = '  ';
                 $value = stringify($node['valueBefore'], $depth + 1);
-                return "{$ident}{$sign}{$nodeName}: {$value}";
+                return "{$ident}  {$nodeName}: {$value}";
             default:
                 throw new \Exception("Unknown type node, current value is {$type}");
         }
