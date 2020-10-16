@@ -29,7 +29,6 @@
         "symfony/var-dumper": "^5.1"
     },
     "scripts": {
-        "phpcs": "php ./vendor/bin/phpcs",
         "test": "phpunit tests"
     }
 }

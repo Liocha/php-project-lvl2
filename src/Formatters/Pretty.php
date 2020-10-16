@@ -58,7 +58,8 @@ function stringify($nodeValue, $depth)
             fn ($name) => "    {$ident}{$name}: " . stringify($nodeValue->$name, $depth + 1),
             $nodeNames
         );
-        return "{\n" . implode("\n", $nodeValues) . "\n{$ident}}";
+        $value = implode("\n", $nodeValues);
+        return "{\n{$value}\n{$ident}}";
     }
 
     if (is_array($nodeValue)) {
